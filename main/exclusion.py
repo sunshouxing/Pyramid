@@ -2,6 +2,7 @@
 
 r"""module doc
 """
+# ---- Imports ---------------------------------------------------------------------------
 from traits.has_traits import HasTraits
 from traits.trait_types import Str, Int, Enum
 from traitsui.group import VGroup, HGroup

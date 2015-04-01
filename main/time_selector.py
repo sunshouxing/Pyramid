@@ -2,7 +2,7 @@
 
 r"""date and time selector"""
 
-# -------[import]-----------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 from traits.has_traits import HasTraits
 from traits.trait_types import Time, Date
 from traitsui.group import HGroup
@@ -11,7 +11,7 @@ from traitsui.view import View
 
 
 class TimeSelector(HasTraits):
-    #--- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     date = Date
 
     time = Time
@@ -19,7 +19,7 @@ class TimeSelector(HasTraits):
     def __init__(self, label=''):
         self.label = label
 
-    #--- Traits View Definitions ------------------------------------------------
+    # ---- Traits View Definitions -------------------------------------------------------
     def traits_view(self):
         return View(
             HGroup(

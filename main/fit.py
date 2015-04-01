@@ -2,7 +2,7 @@
 
 r"""module doc
 """
-# ------[import]-----------------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 import numpy as np
 from scipy import stats
 from scipy.stats import rv_continuous
@@ -20,7 +20,7 @@ from workspace import DATA
 
 
 class FitController(Controller):
-    # --- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     candidate_data_names = List(Str)
     selected_data_name = Str
     fit_result = Str
@@ -35,7 +35,7 @@ class FitController(Controller):
     def __init__(self):
         self.candidate_data_names = DATA.keys()
 
-    # -- Event Handlers ----------------------------------------------------------
+    # ---- Event Handlers ----------------------------------------------------------------
     def _selected_data_name_changed(self):
         self.info.object.data = DATA[self.selected_data_name]
 
@@ -59,7 +59,7 @@ class FitController(Controller):
 
 
 class Fit(HasTraits):
-    # ---- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     # the fit's name
     name = Str
 
@@ -75,14 +75,14 @@ class Fit(HasTraits):
     def __init__(self, target):
         self.target = target
 
-    #-- Event Handlers ---------------------------------------------------------
+    # - Event Handlers ---------------------------------------------------------
     def _distribution_changed(self):
         if self.distribution is not None and self.distribution.shapes is not None:
             self.shapes = [p.strip() for p in self.distribution.shapes.split(",")]
         else:
             self.shapes = []
 
-    #---- Traits View Definitions ------------------------------------------------
+    # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
         VGroup(
             Group(

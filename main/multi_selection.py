@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+# ---- Imports ---------------------------------------------------------------------------
 from traits.api import HasTraits, Instance, List
 from traitsui.api import View, Item, TableEditor, ObjectColumn
 from traitsui.table_filter import \

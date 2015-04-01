@@ -2,7 +2,7 @@
 
 r""" Random data array generator """
 
-# --------[import]-----------------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 import numpy as np
 from scipy import stats
 from traits.api import HasTraits, Instance, Int
@@ -60,7 +60,7 @@ class GeneratorHandler(Controller):
 
 
 class RandomDataGenerator(HasTraits):
-    #--- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
 
     # the model of random data distribution
     distribution = Instance(stats.rv_continuous)
@@ -92,7 +92,7 @@ class RandomDataGenerator(HasTraits):
         self.scale = 1
 
 
-    #-- Event Handlers ---------------------------------------------------------
+    # - Event Handlers ---------------------------------------------------------
     def _distribution_changed(self):
         shapes = []
 
@@ -112,7 +112,7 @@ class RandomDataGenerator(HasTraits):
         except Exception as error:
             print "shape parameters: {}".format(error)
 
-    #--- Traits View Definitions ------------------------------------------------
+    # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
         VGroup(
             HGroup(

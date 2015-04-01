@@ -2,7 +2,7 @@
 
 r""" Used by distribution fitting tool to import data or generate random data """
 
-# --------[import]-----------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 import numpy as np
 from traits.api import HasTraits, Instance
 from traits.trait_types import Str, List, Bool
@@ -60,7 +60,7 @@ class DataManager(Controller):
 
 
 class DataImporter(HasTraits):
-    # --- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     data = Instance(np.ndarray)
 
     name = Str
@@ -82,7 +82,7 @@ class DataImporter(HasTraits):
         else:
             self.completable = False
 
-    #--- Traits View Definitions ------------------------------------------------
+    # ---- Traits View Definitions -------------------------------------------------------
     complete_button = Action(
         id="dm_complete_button",
         name=u"完成",

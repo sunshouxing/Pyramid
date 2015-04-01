@@ -2,7 +2,7 @@
 
 r""" Defines the RangeSelection and RangeSelectionOverlay class. """
 
-# ---- Imports --------------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 from __future__ import with_statement
 from numpy import array
 
@@ -15,7 +15,7 @@ from chaco.api import \
 
 
 class RangeSelection(HasTraits):
-    #---- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     # whether the range selection is active or not
     active = Bool
 
@@ -58,9 +58,9 @@ class RangeSelectionOverlay(AbstractOverlay):
 
     coordinate = Property(depends_on=['selection.active', 'selection.lower', 'selection.upper'])
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # Appearance traits
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
 
     # The color of the selection border line.
     border_color = ColorTrait("dodgerblue")
@@ -73,9 +73,9 @@ class RangeSelectionOverlay(AbstractOverlay):
     # The transparency of the fill color.
     alpha = Float(0.3)
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # AbstractOverlay interface
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
 
     def __init__(self, *args, **traits):
         super(RangeSelectionOverlay, self).__init__(*args, **traits)
@@ -104,10 +104,9 @@ class RangeSelectionOverlay(AbstractOverlay):
                 gc.set_line_dash(self.border_style_)
                 gc.draw_rect((lower_left[0], lower_left[1], upper_right[0], upper_right[1]))
 
-
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # Private methods
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     @on_trait_change("selection.active,selection.lower,selection.upper")
     def selection_changed(self):
         self.plot.request_redraw()
@@ -137,9 +136,9 @@ class RangeSelectionOverlay(AbstractOverlay):
             else:
                 return 0
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # Trait event handlers
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
 
     def _component_changed(self, old, new):
         self._attach_metadata_handler(old, new)
@@ -166,9 +165,9 @@ class RangeSelectionOverlay(AbstractOverlay):
         self.component.request_redraw()
         return
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # Default initializer
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
 
     def _mapper_default(self):
         # If the plot's mapper is a GridMapper, return either its
@@ -184,9 +183,9 @@ class RangeSelectionOverlay(AbstractOverlay):
         else:
             return mapper
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # Property getter/setters
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
 
     @cached_property
     def _get_plot(self):

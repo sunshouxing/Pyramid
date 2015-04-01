@@ -2,7 +2,7 @@
 
 r"""distribution fitting tool"""
 
-# ------[import]-----------------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 import numpy as np
 from traits.api import HasTraits, Instance, Enum, Button, Dict
 from traits.has_traits import on_trait_change
@@ -111,9 +111,9 @@ class DistributionFittingTool(HasTraits):
 
         self.plot = plot
 
-    #---------------------------------------------------
+    # ------------------------------------------------------------------------------------
     # design the view of distribution fitting tool
-    #---------------------------------------------------
+    # ------------------------------------------------------------------------------------
     @staticmethod
     def traits_view():
         # design menu

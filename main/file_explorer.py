@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# --- Imports --------------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 from os import walk, getcwd, listdir
 from os.path import splitext, join
 
@@ -10,9 +10,9 @@ from traitsui.api import \
     View, VGroup, VSplit, HGroup, Item, CodeEditor, TitleEditor, DNDEditor
 
 
+# ---- Constants -------------------------------------------------------------------------
 
-# -- Constants ------------------------------------------------------------------
-# -- LiveSearch class -----------------------------------------------------------
+# ---- LiveSearch Class ------------------------------------------------------------------
 class LiveSearch(HasTraits):
     # The current root directory being searched:
     root = Directory(getcwd(), entries=10)
@@ -47,7 +47,7 @@ class LiveSearch(HasTraits):
     # Summary of current number of files and matches:
     summary = Property  # Str
 
-    # -- Traits UI Views --------------------------------------------------------
+    # -- Traits UI Views -----------------------------------------------------------------
     view = View(
         VGroup(
             HGroup(
@@ -64,7 +64,7 @@ class LiveSearch(HasTraits):
                 VGroup(
                     Item('summary',
                          editor=TitleEditor()
-                    ),
+                         ),
                     dock='horizontal',
                     show_labels=False
                 ),
@@ -73,11 +73,11 @@ class LiveSearch(HasTraits):
                         Item('selected_full_name',
                              editor=TitleEditor(),
                              springy=True
-                        ),
+                             ),
                         Item('selected_full_name',
                              editor=DNDEditor(),
                              tooltip='Drag this file'
-                        ),
+                             ),
                         show_labels=False
                     ),
                     Item('selected_contents',
@@ -85,7 +85,7 @@ class LiveSearch(HasTraits):
                          editor=CodeEditor(mark_lines='mark_lines',
                                            line='selected_line',
                                            selected_line='selected_line')
-                    ),
+                         ),
                     dock='horizontal',
                     show_labels=False
                 ),
@@ -100,7 +100,7 @@ class LiveSearch(HasTraits):
         resizable=True
     )
 
-    # -- Property Implementations -----------------------------------------------
+    # -- Property Implementations --------------------------------------------------------
     @property_depends_on('search, case_sensitive')
     def _get_filter(self):
         if len(self.search) == 0:
@@ -152,7 +152,7 @@ class LiveSearch(HasTraits):
             return 1
 
         return int(selected.matches[self.selected_match - 1
-        ].split(':', 1)[0])
+                                    ].split(':', 1)[0])
 
     @property_depends_on('selected')
     def _get_selected_full_name(self):
@@ -179,7 +179,7 @@ class LiveSearch(HasTraits):
         return 'A total of %d files with %d files containing %d matches.' % (
             len(source_files), files, matches )
 
-    #-- Traits Event Handlers --------------------------------------------------
+    # - Traits Event Handlers --------------------------------------------------
 
     def _selected_changed(self):
         self.selected_match = 1

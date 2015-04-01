@@ -2,14 +2,14 @@
 
 r"""float range selector"""
 
-# -------[import]-----------------------------------------------------------------
+# ---- Imports ---------------------------------------------------------------------------
 from traits.api import HasTraits
 from traits.trait_types import Str, Float, Range
 from traitsui.api import View, Item, HGroup
 
 
 class RangeSelector(HasTraits):
-    #--- Trait Definitions-------------------------------------------------------
+    # ---- Trait Definitions -------------------------------------------------------------
     name = Str("")
 
     # the lower bound of the value
@@ -21,7 +21,7 @@ class RangeSelector(HasTraits):
     # the value to select
     value = Range(low="lower", high="upper", value=1.0)
 
-    #--- Traits View Definitions ------------------------------------------------
+    # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
         HGroup(
             Item("name", style="readonly", width=0.1, show_label=False),
