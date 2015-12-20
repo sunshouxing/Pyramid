@@ -143,5 +143,10 @@ class MultiSelection(HasTraits):
 
 
 if __name__ == "__main__":
-    p = MultiSelection()
+    x = np.linspace(-140, 140, 1000)
+    y = np.sin(x) * x ** 3
+    y /= np.max(y)
+    data = ArrayPlotData(x=x, y=y)
+
+    p = MultiSelection(data)
     p.configure_traits()
