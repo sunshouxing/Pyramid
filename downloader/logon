@@ -1,0 +1,759 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=8" />
+
+	<title>上海闵浦二桥结构健康监测系统</title>
+	<meta name="description" content="上海闵浦二桥结构健康监测系统" />
+
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Content.css" />
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Core.css" />
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Layout.css" />
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Dock.css" />
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Window.css" />
+	<link rel="stylesheet" type="text/css" href="/web/themes/default/mocha/css/Tabs.css" />
+
+	<!--[if IE]>
+		<script type="text/javascript" src="/web/scripts/mocha/excanvas_r43.js"></script>
+	<![endif]-->
+
+	<script type="text/javascript" src="/web/scripts/mootools/mootools-core.js"></script>
+	<script type="text/javascript" src="/web/scripts/mootools/mootools-more.js"></script>
+
+	<script type="text/javascript" src="/web/scripts/mocha/source/Core/Core.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Layout/Layout.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Layout/TopPanel.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Layout/Dock.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Window/Window.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Window/Modal.js"></script>
+	<script type="text/javascript" src="/web/scripts/mocha/source/Components/Tabs.js"></script>
+
+	<script type="text/javascript" src="/web/scripts/mocha/init.js"></script>
+	
+    <script type="text/javascript" src="/web/scripts/system/function.js"></script>
+    <script type="text/javascript">
+        var url = "";
+        if(url.trim() != ""){
+            location.replace(url);
+        }
+        function enter(modulename, url,w,h, privilegeId) {
+            
+            
+                
+                
+            
+            new MUI.Window({
+                id: modulename,
+                title: modulename,
+                restrict: false,
+                loadMethod: 'iframe',
+                contentURL: url,
+//                container: 'pageWrapper',
+                width: w,
+                height: h,
+                x: 0,
+                y: 0
+            });
+            if(privilegeId != ''){
+                doRequest("/web/common/util/ajax-util!logger?entityId=" + privilegeId, "POST", null, null);
+                
+            }
+        }
+
+        var submenucount = 15;
+        var oldsubmenu = null;
+
+        function changeSubMenu(id) {
+
+            for (var i = 0; i < submenucount; i++) {
+                if (i != id){
+                    $('submenu'+i).style.display = 'none';
+                    $("windowmenu" + i).style.color = "#003EAB";
+                }
+                else{
+                    $('submenu'+i).style.display = '';
+                    $("windowmenu" + i).style.color = "#00B0F0";
+                }
+            }
+        }
+
+        function changecolor(obj){
+            if(oldsubmenu){
+                oldsubmenu.style.color = "black";
+            }
+            oldsubmenu = obj;
+            obj.style.color  = "#00B0F0";
+        }
+    </script>
+
+    <SCRIPT language=JavaScript>
+<!--
+	
+	
+	
+
+
+
+	
+	
+	
+	
+	
+	
+	
+
+
+
+function clock()
+{
+	var currentDate = new Date();
+	var currentTime = currentDate.getTime();
+//		lastTime = currentTime;
+  currentDate.setTime(currentTime);
+	var year = currentDate.getYear();
+	var month = currentDate.getMonth()+1;
+	var day = currentDate.getDate();
+	var hour = currentDate.getHours();
+	var minute = currentDate.getMinutes();
+	var second = currentDate.getSeconds();
+
+	var s_month = ""+month;
+	if(month<10)
+		s_month = "0"+month;
+	var s_day = ""+day;
+	if(day<10)
+		s_day = "0"+day;
+	var s_hour = ""+hour;
+	if(hour<10)
+		s_hour = "0"+hour;
+	var s_minute = ""+minute
+	if(minute<10)
+		s_minute = "0"+minute;
+	var s_second = ""+second;
+	if(second<10)
+		s_second = "0"+second;
+
+	times.innerHTML=year+"-"+s_month+"-"+s_day+" "+s_hour+":"+s_minute+":"+s_second;
+
+	setTimeout("clock()",1000);
+}
+
+//setTimeout("location.reload()",600000);
+
+
+//-->
+</SCRIPT>
+
+</head>
+<body>
+
+<div id="desktop">
+
+	<div id="desktopHeader">
+		<div id="desktopTitlebarWrapper">
+			<div id="desktopTitlebar">
+				<div id="topNav">
+					<ul class="menu-right">
+						<li><a href="#"><img src="/web/themes/default/mocha/images/youone.gif" alt="首页" width="36" height="36" border="0" onclick="window.location.reload();"  /></a></li>
+                      <li><a class="returnFalse" onclick="enter('修改密码', '/web/s/s02/sys-user!updatepwd',500,200, '');"><img src="/web/themes/default/mocha/images/youtwo.gif" alt="修改密码" width="36" height="36"  border="0"  /></a></li>
+                      
+                      <li><a href="#"><img src="/web/themes/default/mocha/images/youfour.gif" alt="退出系统" width="36" height="36"  border="0"  onclick="window.location='/web/logon!logout';"/></a></li>
+				  </ul>
+			  </div>
+		  </div>
+		</div>
+
+<div id="desktopNavbar_bg">
+    <div id="desktopNavbar_caidan">
+    	<ul>
+        
+		<li><a id="windowmenu0" onclick="changeSubMenu('0');">数据获取</a></li>
+        
+		<li><a id="windowmenu1" onclick="changeSubMenu('1');">数据处理</a></li>
+        
+		<li><a id="windowmenu2" onclick="changeSubMenu('2');">在线评估</a></li>
+        
+		<li><a id="windowmenu3" onclick="changeSubMenu('3');">在线预警</a></li>
+        
+		<li><a id="windowmenu4" onclick="changeSubMenu('4');">专项分析</a></li>
+        
+		<li><a id="windowmenu5" onclick="changeSubMenu('5');">文档管理</a></li>
+        
+		</ul>
+
+    </div>
+  <div id="desktopNavbar">
+      
+			<ul id="submenu0" style="display:none;">
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('监测原始数据', '/web/m/m01/device-main',1024,480, '26');">监测原始数据</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('人工检测数据', '/web/m/m03/monitor-proj-main',1024,480, '28');">人工检测数据</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('动态称重数据', '/web/w/w02/sys-weight-data-main',1024,480, '54');">动态称重数据</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('历史数据文件查询', '/web/m/m04/channel-data-file-main',1024,480, '29');">历史数据文件查询</a></li>
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<ul id="submenu1" style="display:none;">
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('逻辑组管理', '/web/a/a01/logic-group-main',1024,480, '2');">逻辑组管理</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('逻辑组数据查询', '/web/a/a02/logic-channel-main',1024,480, '3');">逻辑组数据查询</a></li>
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<ul id="submenu2" style="display:none;">
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('在线评估体系', '/web/v/v01/evaluate-system-main',1024,480, '46');">在线评估体系</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('在线评估结果', '/web/v/v02/evaluate-result-main',1024,480, '47');">在线评估结果</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('在线评估报告', '/web/v/v03/evaluate-report-main',1024,480, '48');">在线评估报告</a></li>
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<ul id="submenu3" style="display:none;">
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('通道报警结果', '/web/f/f06/logic-channel-data-main',1024,480, '57');">通道报警结果</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('结构预警设置', '/web/f/f03/structure-alarm-type-main',1024,480, '22');">结构预警设置</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('结构预警结果', '/web/f/f04/structure-alarm-result-main',1024,480, '23');">结构预警结果</a></li>
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('异常事件报告', '/web/f/f05/structure-alarm-result-main',1024,480, '24');">异常事件报告</a></li>
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<ul id="submenu4" style="display:none;">
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<ul id="submenu5" style="display:none;">
+                
+                <li><a class="returnFalse" onclick="changecolor(this);enter('文档综合查询', '/web/d/d04/document-search-main',1024,480, '18');">文档综合查询</a></li>
+                
+                
+                        
+                            
+                        
+                        
+                            
+                        
+                        
+			</ul>
+      
+			<div class="toolbox divider">
+				<div id="spinnerWrapper"><div id="spinner"></div></div>
+			</div>
+
+          
+				
+					
+					
+					
+				
+			
+			<div class="toolboxtime">&nbsp;</div>
+			<div class="toolboxtime"><span id="times">2015-04-09 19:18:11</span><img src="/web/themes/default/mocha/images/time.gif" alt="" /></div>
+
+
+	  </div>
+        	</div> <!-- desktopNavbar end -->
+	</div><!-- desktopHeader end -->
+
+	<div id="dockWrapper">
+		<div id="dock">
+			<div id="dockPlacement"></div>
+			<div id="dockAutoHide"></div>
+			<div id="dockSort"><div id="dockClear" class="clear"></div></div>
+		</div>
+	</div>
+
+
+	
+	<div id="pageWrapperContainer" style="height:48%;" >
+        <div id="topWrapper" style="height:100%"></div>
+	</div>
+	<div id="pageWrapper"></div>
+
+	<div id="desktopFooterWrapper">
+		<div id="desktopFooter"  align="center">
+            <table border="0" width="100%" >
+                <tr>
+                    <td nowrap width="20%" align="left" style="color:#0000FF;">你好：孙利民&nbsp;&nbsp;欢迎您！&nbsp;&nbsp;&nbsp;&nbsp;
+                    </td>
+                    <td nowrap width ="60%" align="left" style="color:#0000FF;">
+                        <marquee onmouseover="this.stop();" onmouseout="this.start();"><span id="msg">使用系统时，模块窗体不要开启太多，会影响浏览器效率</span> </marquee>
+                    </td>
+                    <td nowrap width="20%" align="right" style="font-family:gray;"><span style="color:gray;">上海巨一科技发展有限公司</span></td>
+                </tr>
+            </table>
+		</div>
+	</div>
+
+</div><!-- desktop end -->
+<script type="text/javascript">
+    var timeHandler = window.setInterval(function() {
+        doRequest("/web/s/s07/bulletin!mainMsg?path=/web", "POST", callBack, null);
+    }, 60000); // 1 min
+
+    doRequest("/web/s/s07/bulletin!mainMsg?path=/web", "POST", callBack, null);
+    function callBack(ret){
+        document.getElementById("msg").innerHTML =ret;
+    }
+</script>
+<script type="text/javascript">
+    var currentModel = false;
+    function tips_pop() {
+        var MsgPop = document.getElementById("winpop");
+//        var MsgTab = document.getElementById("wintab");
+        var popH = parseInt(MsgPop.style.height);
+
+        if (popH == 0) {
+//            checkAlarm(0);
+            MsgPop.style.display = "block";
+            closeTab();
+//            MsgTab.style.display = "none";
+            show = setInterval("changeH('up')", 2);
+        }
+        else {
+            hide = setInterval("changeH('down')", 2);
+        }
+    }
+    function changeH(str) {
+        var MsgPop = document.getElementById("winpop");
+//        var MsgTab = document.getElementById("wintab");
+        var popH = parseInt(MsgPop.style.height);
+        if (str == "up") {
+            if (popH <= 195) {
+                MsgPop.style.height = (popH + 4).toString() + "px";
+            }
+            else {
+                currentModel = true; // 表示弹出框显示状态
+                clearInterval(show);
+            }
+        }
+        if (str == "down") {
+            if (popH >= 4) {
+                MsgPop.style.height = (popH - 4).toString() + "px";
+            }
+            else {
+                currentModel = false; // 表示弹出框没有显示
+                clearInterval(hide);
+                MsgPop.style.display = "none";
+                openTab();
+//                MsgTab.style.display = "block";
+            }
+        }
+    }
+    window.onload = function() {
+        clock();
+        document.getElementById('winpop').style.height = '0px';
+//        tips_pop();
+//        getData();
+//        setTimeout("tips_pop()", 30000);
+        window.setInterval("getData()", 300000);  // 5min
+        window.setTimeout("getData()", 3000);     // 3sec
+    };
+
+    function getData(){
+        doRequest("/web/common/util/common-util!quickMsg", "POST", doQuickMsg, null);
+    }
+
+    var alarm0Content = "";
+    var alarm1Content = "";
+    var alarm2Content = "";
+    var alarm3Content = "";
+    var alarm4Content = "";
+
+    function goResult(id, bulletinId, name){
+        enter(name, '/web/f/f08/alarm-push-result?id=' + id,700,400,null);
+        doRequest("/web/s/s07/bulletin!changeStatus?id=" + bulletinId, "POST", getData, null);
+    }
+
+    function goSystemMaintain(id,title){
+        enter(title,"/web/p/p09/bulletin?id="+id,700,400,null);
+        doRequest("/web/p/p09/bulletin!confirm?id="+id,"POST",getData,null);
+    }
+
+    var timer;
+    function doQuickMsg(ret){
+        if(ret && ret.length > 0){
+            try{
+                ret = eval("("+ret+")");
+            }
+            catch(E){
+                return;
+            }
+            var i0 = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var i3 = 0;
+            var i4 = 0;
+            var ia = 0;
+            var ib = 0;
+            alarm0Content = "";
+            alarm1Content = "";
+            alarm2Content = "";
+            alarm3Content = "";
+            alarm4Content = "";
+            for(var i = 0; i < ret.length; i++){
+                var id = ret[i].id;
+                var wholetitle = ret[i].title;
+                var type = ret[i].type;
+                var resultId = ret[i].resultId;
+                var resultName = ret[i].resultName;
+                var view = ret[i].view;
+                var title = wholetitle;
+                if(title.length > 30){
+                    title = title.substring(0, 30) + "...";
+                }
+                var resultColor = "red";
+                if(view == "1") resultColor = "";
+                if(type == "0"){
+                    if(i0 < 6){
+                        alarm0Content += (i0 + 1) + "、[<a style='cusor:pointer;color:"+resultColor+"' onclick='goResult("+resultId+","+id+", \""+resultName+"\")'>"+resultName+"</a>]<span style='color:"+resultColor+"' title='" + wholetitle + "'>" + title + "</span><br />";
+                    }
+                    else if(i0 == 6) {
+                        alarm0Content += "......";
+                    }
+                    i0++;
+                    ia++;
+                }
+                else if(type == "1"){
+                    if(i1 < 6){
+                        alarm1Content += (i1 + 1) + "、[<a style='cusor:pointer;color:"+resultColor+"' onclick='goResult("+resultId+","+id+", \""+resultName+"\")'>"+resultName+"</a>]<span style='color:"+resultColor+"' title='" + wholetitle + "'>" + title + "</span><br />";
+                    }
+                    else if(i1 == 6) {
+                        alarm1Content += "......";
+                    }
+                    i1++;
+                    ia++;
+                }
+                else if(type == "2"){
+                    if(i2 < 6){
+                        alarm2Content += (i2 + 1) + "、[<a style='cusor:pointer;color:"+resultColor+"' onclick='goResult("+resultId+","+id+", \""+resultName+"\")'>"+resultName+"</a>]<span style='color:"+resultColor+"' title='" + wholetitle + "'>" + title + "</span><br />";
+                    }
+                    else if(i2 == 6) {
+                        alarm2Content += "......";
+                    }
+                    i2++;
+                    ia++;
+                }
+                else if(type == "3"){
+                    if(i3 < 6){
+                        alarm3Content += (i3 + 1) + "、[<a style='cusor:pointer;color:"+resultColor+"' onclick='goResult("+resultId+","+id+", \""+resultName+"\")'>"+resultName+"</a>]<span style='color:"+resultColor+"' title='" + wholetitle + "'>" + title + "</span><br />";
+                    }
+                    else if(i3 == 6) {
+                        alarm3Content += "......";
+                    }
+                    i3++;
+                    ia++
+                }
+                else if(type == "4"){
+                    if(i4 < 6){
+                        alarm4Content += (i4 + 1) + "、<a style='cusor:pointer;color:"+resultColor+"' onclick='goSystemMaintain("+id+", \""+title+"\")'>"+title+" "+ resultName+"</a><br />";
+                    }
+                    else if(i4 == 6) {
+                        alarm4Content += "......";
+                    }
+                    i4++;
+                    ib++;
+                }
+            }
+            document.getElementById("num_0").innerHTML = i0;
+            if(i0 > 0){
+                document.getElementById("num_0").style.color = "red";
+            }
+            else {
+                document.getElementById("num_0").style.color = "black";
+            }
+            document.getElementById("num_1").innerHTML = i1;
+            if(i1 > 0){
+                document.getElementById("num_1").style.color = "red";
+            }
+            else {
+                document.getElementById("num_1").style.color = "black";
+            }
+            document.getElementById("num_2").innerHTML = i2;
+            if(i2 > 0){
+                document.getElementById("num_2").style.color = "red";
+            }
+            else {
+                document.getElementById("num_2").style.color = "black";
+            }
+            document.getElementById("num_3").innerHTML = i3;
+            if(i3 > 0){
+                document.getElementById("num_3").style.color = "red";
+            }
+            else {
+                document.getElementById("num_3").style.color = "black";
+            }
+            document.getElementById("num_4").innerHTML = i4;
+            if(i4 > 0){
+                document.getElementById("num_4").style.color = "red";
+            }
+            else {
+                document.getElementById("num_4").style.color = "black";
+            }
+
+            document.getElementById("num_a").innerHTML = ia;
+            if(ia > 0){
+                document.getElementById('alarm_type0').style.color = "red";
+            }
+            else{
+                document.getElementById('alarm_type0').style.color = "black";
+            }
+            document.getElementById("num_b").innerHTML = ib;
+            if(ib > 0){
+                document.getElementById('alarm_type1').style.color = "red";
+            }
+            else{
+                document.getElementById('alarm_type1').style.color = "black";
+            }
+
+            document.getElementById("num_t").innerHTML = ret.length;
+//            document.getElementById("quickName").value = title;
+//            document.getElementById("quickId").value = id;
+            checkAlarm(currentIndex);
+            if(i > 0){
+                tabShow = true;
+                document.getElementById("quickA").style.color = "red";
+                stoptimer();
+                blinklink();
+                if(!currentModel){
+                    openTab();
+                }
+//                document.getElementById("wintab").style.display = "block";
+            }
+            else {
+                tabShow = false;
+                document.getElementById("quickA").style.color = "#096DD1";
+                closeTab();
+                stoptimer();
+//                document.getElementById("wintab").style.display = "none";
+                return;
+            }
+            try{
+                danger.play();
+            }
+            catch(E){}
+        }
+    }
+    function blinklink() {
+        if (!document.getElementById('quickA').style.color) {
+            document.getElementById('quickA').style.color = "red"
+        }
+        if (document.getElementById('quickA').style.color == "red") {
+            document.getElementById('quickA').style.color = "black"
+        }
+        else {
+            document.getElementById('quickA').style.color = "red"
+        }
+        timer = setTimeout("blinklink()", 300)
+    }
+
+
+    function stoptimer() {
+        clearTimeout(timer)
+    }
+
+    function quickMsg(){
+        var id = document.getElementById("quickId").value;
+        var name = document.getElementById("quickName").value;
+
+        enter(name, '/web/s/s07/bulletin?id=' + id, 500, 300, null);
+    }
+
+    var tabShow = true;
+
+    function closeTab(){
+        document.getElementById("wintab").style.display = "none";
+    }
+
+    function openTab(){
+        if(tabShow){
+            document.getElementById("wintab").style.display = "block";
+        }
+    }
+
+    function goModule(name, code){
+        var ret = getUrlContent("/web/common/util/ajax-util!hasprivilege?privilegecode="+code, "POST", null);
+        if(ret.indexOf("false") >= 0){
+            alert("您无权查看更详细信息,请与管理员联系!");
+        }
+        else {
+            enter(name, '/web' + ret.split(",")[0],1024,480,ret.split(",")[1]);
+        }
+    }
+
+    var currentIndex = 0;
+    var currentType = 0;
+
+    function checkAlarm(index){
+        currentIndex = index;
+        for(var i = 0; i < 4; i++){
+            document.getElementById("alarm_" + i).style.color = "black";
+        }
+        document.getElementById("alarm_" + index).style.color = "#00B0F0";
+        var content  = "";
+        if(index == 0){
+            content = alarm0Content;
+        }
+        else if(index == 1){
+            content = alarm1Content;
+        }
+        else if(index == 2){
+            content = alarm2Content;
+        }
+        else if(index == 3){
+            content = alarm3Content;
+        }
+        else if(index == 4){
+            content = alarm4Content;
+        }
+        document.getElementById("quickMsg").innerHTML = content;
+//        document.getElementById("quickMsg").innerHTML = content;
+//        document.getElementById("quickMsg").innerHTML = "报警类型：" + index;
+//        alert(index);
+    }
+    function checkType(index){
+
+        currentType = index;
+        for(var i = 0; i < 2; i++){
+            document.getElementById("alarm_type" + i).style.color = "black";
+        }
+        document.getElementById("alarm_type" + index).style.color = "#00B0F0";
+        var type0 = eval("document.all.type0");
+        var type1 = eval("document.all.type1");
+        var more0 = eval("document.all.moref08");
+        var more1 = eval("document.all.morep09");
+        if(index == "0") {
+            type0.style.display = "";
+            type1.style.display = "none";
+            more0.style.display = "";
+            more1.style.display = "none";
+            checkAlarm(0);
+        }
+        else{
+            type0.style.display = "none";
+            type1.style.display = "";
+            more0.style.display = "none";
+            more1.style.display = "";
+            checkAlarm(4);
+        }
+    }
+    
+        
+        
+            
+            
+        
+        
+    
+
+</script>
+<style type="text/css">
+#winpop { width:380px; height:0px; position:absolute; right:0; bottom:0; margin:0; padding:1px; overflow:hidden; display:none;}
+#wintab {filter:alpha(opacity=80);font-weight:bold; width:200px; height:18px; position:absolute; right:0; bottom:40px; margin:0; padding:1px; overflow:hidden;display:none; background:#86B7E1}
+#winpop .title { width:100%; height:20px; line-height:20px; background:#F2F2F2; font-weight:bold; border:1px solid #666;text-align:left; font-size:12px;}
+#winpop .title2 { width:100%; height:20px; line-height:20px; background:#F2F2F2; font-weight:bold; border:1px solid #666;text-align:right; font-size:12px;}
+
+#winpop .botton { width:100%; height:20px; line-height:80px; font-weight:bold;font-size:12px; text-align:left}
+#winpop .main { width:100%; height:150px; line-height:20px; font-weight:bold;font-size:12px; text-align:left}
+#winpop .con { width:100%; height:150px; line-height:80px; font-weight:bold;  border:1px solid #666;font-size:12px; text-align:center} /* http://www.codefans.net */
+#silu { font-size:12px; color:#666; position:absolute; right:0; text-align:right; text-decoration:underline; line-height:22px;}
+.close { position:absolute; right:4px; top:0; color:#000; cursor:pointer;vertical-align:middle;}
+.more {position:absolute; right:4px; bottom:20px; color:#000}
+.tab {position:absolute; left:4px; top:25px; color:#000}
+.tab2 {position:absolute; left:4px; bottom:5px; color:#000}
+</style>
+<input type="hidden" id="quickName">
+<input type="hidden" id="quickId">
+<div style="z-index:1000" id="winpop">
+ <div class="title">&nbsp;系统消息<span class="close" onclick="tips_pop()">×</span></div>
+ <div id="type0" class="title2">
+<span class="tab"><span id="alarm_0" style="cursor:pointer" onclick="checkAlarm(0)">系统报警(<span id="num_0"></span>)</span>&nbsp;|&nbsp;<span id="alarm_1" style="cursor:pointer" onclick="checkAlarm(1)">结构报警(<span id="num_1"></span>)</span>&nbsp;|&nbsp;<span id="alarm_2" style="cursor:pointer" onclick="checkAlarm(2)">导出量通道报警(<span id="num_2"></span>)</span>&nbsp;|&nbsp;<span id="alarm_3" style="cursor:pointer" onclick="checkAlarm(3)">通道报警(<span id="num_3"></span>)</span></span>
+
+ </div>
+    <div id="type1" class="title2" style="display:none;">
+<span class="tab"><span id="alarm_4" style="cursor:pointer;color:#00B0F0" >系统维护(<span id="num_4"></span>)</span></span>
+ </div>
+ <div class="con" style="filter:alpha(opacity=80);background:#FFFFFF">
+ <div class="main" id="quickMsg" >&nbsp;</div></div>
+<div class="title2">
+
+<span class="more" id="moref08"><a style="cursor:pointer" onclick="goModule('报警推送结果', 'f08');">more</a></span>
+<span class="more" id="morep09" style="display:none"><a style="cursor:pointer" onclick="goModule('系统维护', 'p09');">more</a></span>
+ </div>
+    <div class="title2">
+<span class="tab2"><span id="alarm_type0" style="cursor:pointer;color:#00B0F0" onclick="checkType(0)">系统报警推送(<span id="num_a"></span>)</span>&nbsp;|&nbsp;<span id="alarm_type1" style="cursor:pointer" onclick="checkType(1)">系统维护(<span id="num_b"></span>)</span></span>
+ </div>
+<embed id="danger"  src="/web/themes/default/css/danger.mid" hidden="true" loop="false" autostart="false"  />
+</div>
+<div style="z-index:1" id="wintab">
+ <div class="title" style="text-align:center;">&nbsp;<a style="cursor:pointer;" id="quickA" onclick="tips_pop();">您共收到(<span id="num_t">0</span>)条系统信息</a><span class="close" onclick="closeTab();">×</span></div>
+</div>
+</body>
+</html>
