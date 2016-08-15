@@ -49,7 +49,7 @@ class GeneratorHandler(Controller):
 
         self.plot = plot
 
-    def do_resample(self):
+    def do_resample(self, info):
         self.model.generate()
 
     def do_export(self, info):
