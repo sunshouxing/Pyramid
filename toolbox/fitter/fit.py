@@ -15,8 +15,8 @@ from traitsui.handler import Controller
 from traitsui.item import spring, Label
 from traitsui.menu import Action
 
-from workspace import FITS
-from workspace import DATA
+from main.workspace import FITS
+from main.workspace import DATA
 
 
 class FitController(Controller):
@@ -50,12 +50,12 @@ class FitController(Controller):
         self.info.object.fit = self.info.object.distribution(**shapes)
 
     def export_fit(self, info):
-        fit_name = self.model.name
+        fit_name = info.object.name
         fit = info.object.fit
         FITS[fit_name] = fit
 
-        self.model.target.current_fit_name = info.object.name
-        info.ui.control.Close()
+        info.object.target.current_fit_name = fit_name
+        info.ui.control.close()
 
 
 class Fit(HasTraits):
@@ -73,6 +73,7 @@ class Fit(HasTraits):
     shapes = List(Str)
 
     def __init__(self, target):
+        super(Fit, self).__init__()
         self.target = target
 
     # - Event Handlers ---------------------------------------------------------

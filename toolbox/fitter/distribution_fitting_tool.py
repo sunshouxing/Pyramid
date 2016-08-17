@@ -7,7 +7,7 @@ import numpy as np
 from traits.api import HasTraits, Instance, Enum, Button, Dict
 from traits.has_traits import on_trait_change
 from traits.trait_types import Str
-from traitsui.api import View, Item, HGroup, VGroup, spring, Group
+from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, Group
 from traitsui.editors import ShellEditor
 from traitsui.handler import Controller
 from traitsui.menu import Action, ActionGroup, Menu, MenuBar, ToolBar
@@ -15,8 +15,8 @@ from pyface.image_resource import ImageResource
 from chaco.api import Plot, ArrayPlotData
 from enable.component_editor import ComponentEditor
 
-from workspace import DATA
-from workspace import FITS
+from main.workspace import DATA
+from main.workspace import FITS
 
 
 class DistributionFittingToolController(Controller):
@@ -27,10 +27,10 @@ class DistributionFittingToolController(Controller):
     exclude_data_button = Button(u"例外...")
 
     def _config_data_button_fired(self):
-        from data_manager import DataImporter
-
-        importer = DataImporter(target=self.info.object)
-        importer.edit_traits()
+        from data_manager import DataModel, DataManager
+        data = DataModel(self.info.object)
+        data_manager = DataManager(data)
+        data_manager.configure_traits()
 
     def _new_fit_button_fired(self):
         from fit import Fit
@@ -203,26 +203,22 @@ class DistributionFittingTool(HasTraits):
                 ),
                 HGroup(
                     spring,
-                    Item("handler.config_data_button", tooltip="Import, view, rename, plot and delete data",
-                         show_label=False),
-                    Item("handler.new_fit_button", tooltip="Add a fitted distribution", show_label=False),
-                    Item("handler.manage_fits_button", tooltip="Edit, view, plot and rename fits", show_label=False),
-                    Item("handler.evaluate_button", tooltip="Evaluate fits to compute a table of results",
-                         show_label=False),
-                    Item("handler.exclude_data_button", tooltip="Define rules for excluding data from a fit",
-                         show_label=False),
+                    UItem("handler.config_data_button", tooltip="Import, view, rename, plot and delete data"),
+                    UItem("handler.new_fit_button", tooltip="Add a fitted distribution"),
+                    UItem("handler.manage_fits_button", tooltip="Edit, view, plot and rename fits"),
+                    UItem("handler.evaluate_button", tooltip="Evaluate fits to compute a table of results"),
+                    UItem("handler.exclude_data_button", tooltip="Define rules for excluding data from a fit"),
                     spring,
                 ),
-                Item("plot", show_label=False, editor=ComponentEditor()),
+                UItem("plot", editor=ComponentEditor()),
                 label="Manager",
             ),
             Group(
-                Item(
+                UItem(
                     "values",
                     editor=ShellEditor(share=True),
                     dock="tab",
                     export="DockWindowShell",
-                    show_label=False,
                 ),
                 label="Console",
             ),

@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 from traits.api import HasTraits, Instance, Int
 from traits.has_traits import on_trait_change
-from traitsui.api import View, Item, VGroup, HGroup, spring
+from traitsui.api import View, Item, UItem, UCustom, VGroup, HGroup, spring
 from traitsui.editors import EnumEditor
 from traitsui.handler import Controller
 from traitsui.menu import Action
@@ -16,7 +16,7 @@ from chaco.array_plot_data import ArrayPlotData
 from enable.component_editor import ComponentEditor
 
 from range_selector import RangeSelector
-from workspace import SAMPLES
+from main.workspace import SAMPLES
 
 
 class GeneratorHandler(Controller):
@@ -34,9 +34,6 @@ class GeneratorHandler(Controller):
         action="do_export",
     )
 
-    def __init__(self):
-        pass
-
     def object_samples_changed(self, info):
         y, x = np.histogram(info.object.samples, bins=100)
         x = (x[:-1] + x[1:]) / 2
@@ -53,10 +50,43 @@ class GeneratorHandler(Controller):
         self.model.generate()
 
     def do_export(self, info):
-        data_name = "{}rd_{}".format(info.object.distribution.name, len(SAMPLES))
+        data_name = "{}_rv_{}".format(info.object.distribution.name, len(SAMPLES))
         SAMPLES[data_name] = self.model.samples.copy()
 
         info.ui.control.close()
+
+    # ---- Traits View Definitions -------------------------------------------------------
+    traits_view = View(
+        VGroup(
+            HGroup(
+                spring,
+                Item(
+                    "distribution",
+                    editor=EnumEditor(
+                        values={v: k for (k, v) in stats.__dict__.items() if isinstance(v, stats.rv_continuous)}
+                    ),
+                    label=u"分布类型",
+                ),
+                Item("location", label=u"位置", ),
+                Item("scale", label=u"缩放比例"),
+                Item("size", label=u"样本数量"),
+                spring,
+                show_border=True,
+            ),
+            UCustom("handler.plot", editor=ComponentEditor()),
+            VGroup(
+                UItem("sp1", style="custom"),
+                UItem("sp2", style="custom"),
+                UItem("sp3", style="custom"),
+                show_border=True,
+                label=u"形状参数",
+            ),
+        ),
+        resizable=True,
+        kind="livemodal",
+        title=u"随机变量生成器",
+        buttons=[resample, export],
+    )
 
 
 class RandomDataGenerator(HasTraits):
@@ -82,7 +112,7 @@ class RandomDataGenerator(HasTraits):
     sp2 = Instance(RangeSelector, ())
     sp3 = Instance(RangeSelector, ())
 
-    #initialization
+    # initialization
     def __init__(self, *args, **traits):
         super(RandomDataGenerator, self).__init__(*args, **traits)
 
@@ -90,7 +120,6 @@ class RandomDataGenerator(HasTraits):
         self.size = 1000
         self.location = 0
         self.scale = 1
-
 
     # - Event Handlers ---------------------------------------------------------
     def _distribution_changed(self):
@@ -112,37 +141,7 @@ class RandomDataGenerator(HasTraits):
         except Exception as error:
             print "shape parameters: {}".format(error)
 
-    # ---- Traits View Definitions -------------------------------------------------------
-    traits_view = View(
-        VGroup(
-            HGroup(
-                spring,
-                Item(
-                    "distribution",
-                    editor=EnumEditor(
-                        values={v: k for (k, v) in stats.__dict__.items() if isinstance(v, stats.rv_continuous)}
-                    ),
-                    label=u"分布类型",
-                ),
-                Item("location", label=u"位置", ),
-                Item("scale", label=u"缩放比例"),
-                Item("size", label=u"样本数量"),
-                spring,
-                show_border=True,
-            ),
-            Item("handler.plot", style="custom", show_label=False, editor=ComponentEditor()),
-            VGroup(
-                Item("sp1", style="custom", show_label=False),
-                Item("sp2", style="custom", show_label=False),
-                Item("sp3", style="custom", show_label=False),
-                show_border=True,
-                label=u"形状参数",
-            ),
-        ),
-        resizable=True,
-        kind="livemodal",
-        title=u"随机变量生成器",
-        handler=GeneratorHandler,
-        buttons=[GeneratorHandler.resample, GeneratorHandler.export],
-    )
 
+if __name__ == '__main__':
+    generator_controller = GeneratorHandler(model=RandomDataGenerator())
+    generator_controller.configure_traits()
