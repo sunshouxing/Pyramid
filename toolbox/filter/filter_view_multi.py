@@ -1,28 +1,22 @@
 # -*- coding: utf-8 -*-
 
-# fixture for Ubuntu - independent Python with Canopy packages bundle
-# try:
-#     import ubuntu_fix
-# except ImportError:
-#     pass
+# from traits.etsconfig.api import ETSConfig
+# ETSConfig.toolkit = 'qt4'
 
-from chaco.tools.api import RangeSelection, RangeSelectionOverlay, LegendHighlighter
-from enable.api import LineStyle, ColorTrait
-from enable.component_editor import ComponentEditor
-from traits.api import \
-    Float
-from traitsui.api import HGroup, VGroup
-
-import fft_filter as fil
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
+from traits.api \
+    import HasTraits, Bool, Float, List, Instance, Button, on_trait_change
+from traitsui.api \
+    import View, Item, HGroup, VGroup, TableEditor, ObjectColumn
+from chaco.api \
+    import VPlotContainer
+from chaco.tools.api \
+    import RangeSelection, RangeSelectionOverlay, LegendHighlighter
+from enable.api \
+    import LineStyle, ColorTrait, ComponentEditor
 from numpy import array
 
 from comm import *
+import fft_filter as fil
 
 
 # ############################################
@@ -511,5 +505,6 @@ class FilterController(object):
 
 
 if __name__ == '__main__':
+
     filter_controller = FilterController(fil.simulate_signal())
     filter_controller.figure.configure_traits()
