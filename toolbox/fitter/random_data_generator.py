@@ -3,20 +3,22 @@
 r""" Random data array generator """
 
 # ---- Imports ---------------------------------------------------------------------------
-import numpy as np
 from scipy import stats
-from traits.api import HasTraits, Instance, Int
-from traits.has_traits import on_trait_change
-from traitsui.api import View, Item, UItem, UCustom, VGroup, HGroup, spring
-from traitsui.editors import EnumEditor
-from traitsui.handler import Controller
-from traitsui.menu import Action
-from chaco.plot import Plot
-from chaco.array_plot_data import ArrayPlotData
-from enable.component_editor import ComponentEditor
+import numpy as np
+
+from traits.api \
+    import HasTraits, Instance, Int, Str, on_trait_change
+from traitsui.api import \
+    View, Item, UItem, UCustom, VGroup, HGroup, spring, EnumEditor, Controller, Action
+from traitsui.menu \
+    import OKButton
+from chaco.api \
+    import Plot, ArrayPlotData
+from enable.api \
+    import ComponentEditor
 
 from range_selector import RangeSelector
-from main.workspace import SAMPLES
+from main.workspace import DATA
 
 
 class GeneratorHandler(Controller):
@@ -50,10 +52,20 @@ class GeneratorHandler(Controller):
         self.model.generate()
 
     def do_export(self, info):
-        data_name = "{}_rv_{}".format(info.object.distribution.name, len(SAMPLES))
-        SAMPLES[data_name] = self.model.samples.copy()
-
+        self.edit_traits(view=View(
+            HGroup(
+                spring,
+                UItem('samples_name', tooltip=u'请为导出数据选择一个合适的名字,并保证该名字未被以存在数据占用'),
+                spring
+            ),
+            buttons=[OKButton],
+            title=u'数据命名',
+            width=250,
+        ), kind='livemodal')
+        DATA[self.model.samples_name] = self.model.samples
+        # close the random data generator window after data exported
         info.ui.control.close()
+
 
     # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
@@ -107,6 +119,9 @@ class RandomDataGenerator(HasTraits):
     # the samples
     samples = Instance(np.ndarray)
 
+    # the samples' name
+    samples_name = Str
+
     # the shape parameters of selected distribution
     sp1 = Instance(RangeSelector, ())
     sp2 = Instance(RangeSelector, ())
@@ -141,7 +156,10 @@ class RandomDataGenerator(HasTraits):
         except Exception as error:
             print "shape parameters: {}".format(error)
 
+    def _samples_name_changed(self):
+        print "samples name changed to ", self.samples_name
+
 
 if __name__ == '__main__':
-    generator_controller = GeneratorHandler(model=RandomDataGenerator())
+    generator_controller = GeneratorHandler(RandomDataGenerator())
     generator_controller.configure_traits()

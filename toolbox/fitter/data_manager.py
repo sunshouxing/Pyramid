@@ -3,17 +3,15 @@
 r""" Used by distribution fitting tool to import data or generate random data """
 
 # ---- Imports ---------------------------------------------------------------------------
-import numpy as np
-from traits.api import HasTraits, Instance
-from traits.trait_types import Str, List, Bool
-from traitsui.api import View, Item, UItem, HGroup, VGroup, Group
-from traitsui.editors import EnumEditor
-from traitsui.handler import Controller
-from traitsui.menu import Action
+from traits.api \
+    import HasTraits, Str, Instance, Property, Button, List, cached_property
+from traitsui.api \
+    import View, Item, UItem, HGroup, VGroup, Controller, Action, EnumEditor, spring
 from chaco.api import Plot, ArrayPlotData
-from enable.component_editor import ComponentEditor
+from enable.api import ComponentEditor
 
-from main.workspace import DATA, SAMPLES
+import numpy as np
+from main.workspace import DATA
 
 
 class DataManager(Controller):
@@ -23,19 +21,25 @@ class DataManager(Controller):
     # the select key of DATA
     selected_data_name = Str
 
+    # selected data distribution preview plot
     plot = Instance(Plot)
 
-    def __init__(self, *args, **kwargs):
-        super(DataManager, self).__init__(*args, **kwargs)
+    # button to generate new random variables
+    new_data_button = Button
 
-        self.candidate_data_names = SAMPLES.keys()
-        self.plot = Plot(ArrayPlotData())
+    completable = Property(depends_on=['selected_data_name'])
+
+    def __init__(self, *args, **traits):
+        super(DataManager, self).__init__(*args, **traits)
+
+        self.candidate_data_names = DATA.keys()
+        self.plot = Plot(ArrayPlotData(), title='Data Preview')
 
     def _selected_data_name_changed(self):
-        if self.selected_data_name not in SAMPLES.keys():
+        if self.selected_data_name not in DATA.keys():
             return
 
-        self.model.data = SAMPLES[self.selected_data_name]
+        self.model.data = DATA[self.selected_data_name]
 
         y, x = np.histogram(self.info.object.data, bins=50)
         x = (x[:-1] + x[1:]) / 2
@@ -45,16 +49,20 @@ class DataManager(Controller):
         width = np.ptp(x) / 50
         self.plot.plot(("x", "y"), type="bar", bar_width=width, color="auto")
 
-    def generate_random_data(self, info):
+    def _new_data_button_fired(self, info):
         from random_data_generator import GeneratorHandler, RandomDataGenerator
         GeneratorHandler(RandomDataGenerator()).edit_traits()
 
-        self.candidate_data_names = SAMPLES.keys()
+        self.candidate_data_names = DATA.keys()
+
+    @cached_property
+    def _get_completable(self):
+        print self.selected_data_name
+        return self.selected_data_name is not None
 
     def complete(self, info):
         """the real action of Complete Button"""
-        DATA[self.model.name] = self.model.data
-        self.model.demander.current_data_name = self.model.name
+        self.model.demander.current_data_name = self.selected_data_name
         info.ui.control.close()
 
     # ---- Traits View Definitions -------------------------------------------------------
@@ -62,62 +70,42 @@ class DataManager(Controller):
         id="dm_complete_button",
         name=u"完成",
         action="complete",
-        enabled_when="completable",
-    )
-
-    generate_random_data_button = Action(
-        id="dm_generate_random_data_button",
-        name=u"生成模拟数据...",
-        action="generate_random_data",
+        enabled_when="handler.completable",
     )
 
     trait_view = View(
-        HGroup(
-            VGroup(
+        VGroup(
+            HGroup(
+                Item('10'),
                 Item(
                     "handler.selected_data_name",
                     editor=EnumEditor(name="handler.candidate_data_names", cols=20),
-                    label=u"数据集",
+                    label=u"数据集", width=200,
                 ),
-                Item("name", label=u"名称"),
+                spring,
+                UItem('handler.new_data_button', label=u"生成数据..."),
+                Item('10'),
             ),
-            Item("_"),
-            Group(
-                UItem("handler.plot", editor=ComponentEditor()),
-                label=u"数据预览",
-                show_border=True,
-            ),
+            Item('10'),
+            UItem("handler.plot", editor=ComponentEditor()),
         ),
-        buttons=[generate_random_data_button, complete_button],
-        kind='livemodal'
+        buttons=[complete_button],
+        title=u"数据预览窗口",
+        resizable=True,
+        kind='live'
     )
 
 
-class DataModel(HasTraits):
+class Data(HasTraits):
     # ---- Trait Definitions -------------------------------------------------------------
     data = Instance(np.ndarray)
 
-    name = Str
-
-    completable = Bool
-
-    def __init__(self, demander):
-        super(DataModel, self).__init__()
+    def __init__(self, demander, **traits):
+        super(Data, self).__init__(**traits)
+        # demander is the toolkit which is required to process this data
         self.demander = demander
-
-    def _data_changed(self):
-        self.is_completable()
-
-    def _name_changed(self):
-        self.is_completable()
-
-    def is_completable(self):
-        if self.data is not None and self.name != "":
-            self.completable = True
-        else:
-            self.completable = False
 
 
 if __name__ == '__main__':
-    data_manager = DataManager(DataModel())
+    data_manager = DataManager(model=Data({}))
     data_manager.configure_traits()

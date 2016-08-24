@@ -27,10 +27,10 @@ class DistributionFittingToolController(Controller):
     exclude_data_button = Button(u"例外...")
 
     def _config_data_button_fired(self):
-        from data_manager import DataModel, DataManager
-        data = DataModel(self.info.object)
+        from data_manager import Data, DataManager
+        data = Data(self.info.object)
         data_manager = DataManager(data)
-        data_manager.configure_traits()
+        data_manager.edit_traits()
 
     def _new_fit_button_fired(self):
         from fit import Fit
@@ -68,8 +68,8 @@ class DistributionFittingTool(HasTraits):
         "Lognormal"
     )
 
-    def __init__(self, **traits):
-        super(DistributionFittingTool, self).__init__(**traits)
+    def __init__(self, *args, **traits):
+        super(DistributionFittingTool, self).__init__(*args, **traits)
         self.data = ArrayPlotData()
         self.plot = Plot(self.data)
 
@@ -226,7 +226,7 @@ class DistributionFittingTool(HasTraits):
             toolbar=tool_bar,
             resizable=True,
             width=1200, height=700,
-            title="Distribution Fitting Tool",
+            title=u"分布拟合工具箱",
             handler=DistributionFittingToolController(),
         )
 
