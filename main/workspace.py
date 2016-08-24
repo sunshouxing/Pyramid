@@ -7,3 +7,5 @@ DATA = {}
 FITS = {}
 
 SAMPLES = {}
+
+# EOF

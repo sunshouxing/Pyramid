@@ -9,19 +9,15 @@ import numpy as np
 from traits.api \
     import HasTraits, Instance, Int, Str, on_trait_change
 from traitsui.api import \
-    View, Item, UItem, UCustom, VGroup, HGroup, spring, EnumEditor, Controller, Action
-from traitsui.menu \
-    import OKButton
-from chaco.api \
-    import Plot, ArrayPlotData
-from enable.api \
-    import ComponentEditor
+    View, Item, UItem, UCustom, VGroup, HGroup, spring, EnumEditor, Controller, Action, OKButton
+from chaco.api import Plot, ArrayPlotData
+from enable.api import ComponentEditor
 
-from range_selector import RangeSelector
+from ..common.range_selector import RangeSelector
 from main.workspace import DATA
 
 
-class GeneratorHandler(Controller):
+class RandomDataGenerator(Controller):
     plot = Instance(Plot, ())
 
     resample = Action(
@@ -66,7 +62,6 @@ class GeneratorHandler(Controller):
         # close the random data generator window after data exported
         info.ui.control.close()
 
-
     # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
         VGroup(
@@ -101,7 +96,7 @@ class GeneratorHandler(Controller):
     )
 
 
-class RandomDataGenerator(HasTraits):
+class RandomData(HasTraits):
     # ---- Trait Definitions -------------------------------------------------------------
 
     # the model of random data distribution
@@ -129,7 +124,7 @@ class RandomDataGenerator(HasTraits):
 
     # initialization
     def __init__(self, *args, **traits):
-        super(RandomDataGenerator, self).__init__(*args, **traits)
+        super(RandomData, self).__init__(*args, **traits)
 
         self.distribution = stats.distributions.norm
         self.size = 1000
@@ -158,5 +153,5 @@ class RandomDataGenerator(HasTraits):
 
 
 if __name__ == '__main__':
-    generator_controller = GeneratorHandler(RandomDataGenerator())
-    generator_controller.configure_traits()
+    generator = RandomDataGenerator(RandomData())
+    generator.configure_traits()

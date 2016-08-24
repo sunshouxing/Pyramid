@@ -27,7 +27,7 @@ class DistributionFittingToolController(Controller):
     exclude_data_button = Button(u"例外...")
 
     def _config_data_button_fired(self):
-        from data_manager import Data, DataManager
+        from toolbox.common import Data, DataManager
         data = Data(self.info.object)
         data_manager = DataManager(data)
         data_manager.edit_traits()

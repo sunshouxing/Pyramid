@@ -6,14 +6,11 @@ r"""module doc
 import numpy as np
 from scipy import stats
 from scipy.stats import rv_continuous
-from traits.api import HasTraits, Instance, Str
-from traits.trait_types import List, Button
-from traitsui.api import View, Item, UReadonly, Group
-from traitsui.editors import EnumEditor
-from traitsui.group import VGroup, HGroup
-from traitsui.handler import Controller
-from traitsui.item import spring, Label
-from traitsui.menu import Action
+from traits.api import \
+    HasTraits, Str, Instance, List, Button
+from traitsui.api import \
+    View, Item, UItem, UReadonly, Group, VGroup, \
+    HGroup, spring, Action, Controller, EnumEditor
 
 from main.workspace import FITS
 from main.workspace import DATA
@@ -108,15 +105,15 @@ class Fit(HasTraits):
                 UReadonly("shapes"), label=u"拟合函数参数表", show_border=True,
             ),
             HGroup(
-                spring, Item("handler.apply_fit_button", show_label=False),
+                spring, UItem("handler.apply_fit_button"),
             ),
             Group(
-                Label(u"拟合结果"),
-                Item("handler.fit_result", style="custom", show_label=False),
+                UItem("handler.fit_result", style="custom"), label=u"拟合结果",
             ),
         ),
         handler=FitController,
         buttons=[FitController.export_fit_button],
+        title=u"数据拟合窗口",
         height=700,
         width=400,
         resizable=True,

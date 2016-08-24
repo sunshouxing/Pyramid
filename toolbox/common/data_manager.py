@@ -50,8 +50,8 @@ class DataManager(Controller):
         self.plot.plot(("x", "y"), type="bar", bar_width=width, color="auto")
 
     def _new_data_button_fired(self, info):
-        from random_data_generator import GeneratorHandler, RandomDataGenerator
-        GeneratorHandler(RandomDataGenerator()).edit_traits()
+        from ..generator.random_data_generator import RandomDataGenerator, RandomData
+        RandomDataGenerator(RandomData()).edit_traits()
 
         self.candidate_data_names = DATA.keys()
 
@@ -103,8 +103,3 @@ class Data(HasTraits):
         super(Data, self).__init__(**traits)
         # demander is the toolkit which is required to process this data
         self.demander = demander
-
-
-if __name__ == '__main__':
-    data_manager = DataManager(model=Data({}))
-    data_manager.configure_traits()
