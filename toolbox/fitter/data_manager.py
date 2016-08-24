@@ -57,7 +57,6 @@ class DataManager(Controller):
 
     @cached_property
     def _get_completable(self):
-        print self.selected_data_name
         return self.selected_data_name is not None
 
     def complete(self, info):

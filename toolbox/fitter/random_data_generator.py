@@ -156,9 +156,6 @@ class RandomDataGenerator(HasTraits):
         except Exception as error:
             print "shape parameters: {}".format(error)
 
-    def _samples_name_changed(self):
-        print "samples name changed to ", self.samples_name
-
 
 if __name__ == '__main__':
     generator_controller = GeneratorHandler(RandomDataGenerator())
