@@ -1,77 +1,20 @@
 # -*- coding: utf-8 -*-
-# fixture for Ubuntu - independent Python with Canopy packages bundle
-try:
-    import path_fix
-except ImportError:
-    pass
 
-# from traits.etsconfig.api import ETSConfig
-# ETSConfig.toolkit = 'qt4'
-
-from event_bus import EventBus
-
-from traits.api import \
-    HasTraits, \
-    Instance, \
-    Any, \
-    Bool, \
-    Int, \
-    Str, \
-    String, \
-    PythonValue, \
-    Float, \
-    List, \
-    Tuple, \
-    Dict, \
-    Property, \
-    File, \
-    Button, \
-    on_trait_change, \
-    DelegatesTo, \
-    Event, \
-    cached_property, \
-    TraitType
-
-from traitsui.api import \
-    View, \
-    Item, \
-    TextEditor, \
-    TableEditor, \
-    TabularEditor, \
-    ShellEditor, \
-    InstanceEditor, \
-    ObjectColumn, \
-    TableColumn, \
-    ExpressionColumn, \
-    Label, \
-    HGroup, \
-    VGroup, \
-    VSplit, \
-    Controller, \
-    Handler
-
-# from traitsui.table_filter import \
-#     EvalFilterTemplate,\
-#     MenuFilterTemplate,\
-#     RuleFilterTemplate
-
-from traitsui.message import message
-
-from traitsui.menu \
-    import MenuBar, ToolBar, Menu, Action, Separator, NoButtons
-
-from traitsui.file_dialog \
-    import save_file, open_file
-
-from pyface.api import FileDialog, OK, NO, confirm
-
-import numpy as np
-
+# ---- Import ------------------------------------------------------------
 import json
-
 from operator import itemgetter
 
+import numpy as np
 import scipy.io as sio
+from pyface.api import FileDialog, OK, NO, confirm
+from traits.api import \
+    HasTraits, Instance, Any, Bool, Str, List, Tuple, Dict, Property, Button, \
+    DelegatesTo, Event, TraitType, cached_property, on_trait_change
+from traitsui.api import \
+    View, UCustom, UReadonly, UItem, TextEditor, TableEditor, ShellEditor, \
+    ObjectColumn, Label, HGroup, VGroup, VSplit, Controller, Menu, Action, Separator
+
+from event_bus import EventBus
 
 
 # ############################################
@@ -125,7 +68,7 @@ def q_type(value):
     return '{}.{}'.format(modname, tname)
 
 
-class EVariableExplorerError(Exception):
+class DataExplorerError(Exception):
     """ Generic error in Variable Explorer """
     pass
 
@@ -196,31 +139,31 @@ class RowModel(HasTraits):
 
 
 demo_data = {
-    # 's':'aaa',
-    # 'a':1,
-    # 'b':2L,
-    # 'pi':3.1416,
-    # 'j':(1,2,3),
-    # 'k':[1,2,3],
-    # # 'm':[
-    # #     [
-    # #         [1,2], [3,4],
-    # #     ],
-    # #     [
-    # #         [10,20], [30,40],
-    # #     ],
-    # #     [
-    # #         [100,200], [300,400, [500,600]],
-    # #     ]
-    # # ],
-    # # 'm':[1,2,'x'],
-    # 'd2':dict(a=dict(aa=1,ab=2),b=dict(ba=3,bb=4)),
-    # 'd':{'x':1,'a':"string","b":[[0,1],[2,3]]},
-    # 'a2d':[[0,1],[2,3],[4,5]],
-    # 'dd':{'a':[0,1],'b':[2,3],'c':[4,5,6]},
+    's':'aaa',
+    'a':1,
+    'b':2L,
+    'pi':3.1416,
+    'j':(1,2,3),
+    'k':[1,2,3],
+    # 'm':[
+    #     [
+    #         [1,2], [3,4],
+    #     ],
+    #     [
+    #         [10,20], [30,40],
+    #     ],
+    #     [
+    #         [100,200], [300,400, [500,600]],
+    #     ]
+    # ],
+    # 'm':[1,2,'x'],
+    'd2':dict(a=dict(aa=1,ab=2),b=dict(ba=3,bb=4)),
+    'd':{'x':1,'a':"string","b":[[0,1],[2,3]]},
+    'a2d':[[0,1],[2,3],[4,5]],
+    'dd':{'a':[0,1],'b':[2,3],'c':[4,5,6]},
 }
 
-# relatation between type and a factory function
+# relation between type and a factory function
 types_registry = {
     'numpy.ndarray': 'numpy.array',
 }
@@ -442,134 +385,7 @@ variable_inspector = TableEditor(
     format_func=lambda v: '' if v is None else v,
 )
 
-table_editor = TableEditor(
-    columns=[
-        ObjectColumn(
-            name="fname",
-            label=u"Name",
-            horizontal_alignment="left",
-            style="simple",
-            width=0.2
-        ),
-        ObjectColumn(
-            name="ftype",
-            label=u"Type",
-            horizontal_alignment="left",
-            width=0.2
-        ),
-        ObjectColumn(
-            name="fsize",
-            label=u"Size",
-            horizontal_alignment="left",
-            format_func=lambda b: b if b else '',
-            width=0.1
-        ),
-        ObjectColumn(
-            name="raw_value",
-            label=u"Value",
-            horizontal_alignment="left",
-            width=0.5,
-            style='readonly',
-            format_func=lambda b: str(b),
-        ),
-    ],
-    editable=False,
-    deletable=True,
-    sortable=False,
-    selection_mode='rows',
-    orientation='vertical',
 
-    auto_size=True,
-    # row_factory=RowModel,
-    # show_toolbar=True,
-    rows=3,
-    # handler for selection:
-    on_select='controller.handle_row_select',
-    selected='object.selected_rows',
-    menu=Menu(
-        Action(name='Select All', action='_menu_select_all', enabled_when='len(object.var_list)>0'),
-        Separator(),
-        Action(name='Import...', action='_menu_import'),
-        Separator(),
-        Action(name='Export selected...', action='_menu_do_export_selected', enabled_when='len(object.var_list)>0'),
-        Action(name='Export all...', action='_menu_do_export', enabled_when='len(object.var_list)>0'),
-    )
-)
-
-view = View(
-    VGroup(
-
-        VSplit(
-            HGroup(
-                Label(u' '),
-                Item(
-                    "object.var_list",
-                    style="custom",
-                    editor=table_editor,
-                    show_label=False,
-                ),
-                Label(u' '),
-            ),
-
-            VGroup(
-                HGroup(
-                    Label(u' '),
-                    Item('controller.path',
-                         style='readonly',
-                         show_label=False,
-                         ),
-                    Label(u' '),
-                ),
-                HGroup(
-                    Label(u' '),
-                    Item('controller.inspector.editor_buffer',
-                         style="custom",
-                         editor=variable_inspector,
-                         show_label=False,
-
-                         ),
-                    Label(u' '),
-                    # visible_when='controller.inspector',
-                ),
-
-            ),
-
-            HGroup(
-                Label(u' '),
-                # Item(
-                #     "controller.bt_command",
-                #     show_label=False,
-                #     tooltip=u'Not implemented'
-                # ),
-                Item(
-                    "object.var_space",
-                    # style="custom",
-                    width=450,
-                    editor=ShellEditor(
-                        share=True,
-                        command_executed='object.command_executed',
-                        command_to_execute='object.command_to_execute',
-                    ),
-                    show_label=False,
-                    # emphasized=True,
-                    tooltip=u'Enter the statement and press Enter',
-                    has_focus=True,
-                ),
-                Label(u' '),
-            ),
-
-        ),
-        VGroup(
-            Label(u' '),
-        )
-
-    ),
-    width=600,
-    height=700,
-    resizable=False,
-    title=u'Variable Explorer',
-    # handler=HandleEvent
-)
 
 
 # ############################################
@@ -918,14 +734,11 @@ def inspector_factory(var_root, name, environment, on_change=None):
             on_change=on_change)
 
 
-# ############################################
-# Controller
-# ############################################
+class DataExplorer(Controller):
+    """Sub-application controller
+    """
 
-class VariableExplorer(Controller):
-    """Sub-application controller"""
-
-    # inter-app commands and notifications:
+    # inter-app commands and notifications
     event_bus = Instance(EventBus)
     command = DelegatesTo('event_bus')
     args = DelegatesTo('event_bus')
@@ -947,13 +760,11 @@ class VariableExplorer(Controller):
     def _get_path(self):
         return '{}{}'.format(''.join(self.path_tags), self.inspector_label)
 
-    view = view
-
     inspector_cell_clicked = Event
     inspector_selected_cell = Tuple
 
     def __init__(self, *args, **traits):
-        super(VariableExplorer, self).__init__(*args, **traits)
+        super(DataExplorer, self).__init__(*args, **traits)
         self.inspector = DataInspectorRecord()
         self.var_root = self.model.var_space
         # add notification handler to reflect val_space changes in the inspector
@@ -1025,18 +836,22 @@ class VariableExplorer(Controller):
     # ---------------------------------------
     # Event/command handlers:
     # ---------------------------------------
-
     def _command_changed(self):
         """ Command dispatcher """
-        cmd = self.command
-        # if <str> cmd is not "empty":
-        if cmd:
-            # find command handler in own methods:
+        command = self.command
+        # FIXME delete debug info
+        print 'command: ', self.command
+        # if <str> command is not "empty"
+        if command:
+            # find command handler in own methods
             try:
-                handler = getattr(self, '_{}'.format(cmd))
+                handler = getattr(self, '_{}'.format(command))
+                # FIXME delete debug info
+                print 'handler: ', handler.__name__
             except AttributeError:
                 # ignore command if handler not defined
                 return
+
             handler(self.args)
 
     def _CMD_IMPORT(self, file_name):
@@ -1057,7 +872,7 @@ class VariableExplorer(Controller):
             self.model.from_json_dict(model)
 
         else:
-            raise EVariableExplorerError('Unsupported file format: {}'.format(ext))
+            raise DataExplorerError('Unsupported file format: {}'.format(ext))
 
         # update initial selection - first row:
         if len(self.model.var_list) > 0:
@@ -1083,7 +898,7 @@ class VariableExplorer(Controller):
             with open(file_name, 'wb') as f:
                 f.write(buff)
         else:
-            raise EVariableExplorerError('Unsupported file format: {}'.format(ext))
+            raise DataExplorerError('Unsupported file format: {}'.format(ext))
 
     def _update_editor(self):
         """ 
@@ -1139,10 +954,131 @@ class VariableExplorer(Controller):
             print "Saving:", dlg.path
             self.event_bus.fire_event(send_command, dlg.path)
 
+    # ---- View definition -----------------------------------------------
+    table_editor = TableEditor(
+        columns=[
+            ObjectColumn(
+                name="fname",
+                label=u"Name",
+                horizontal_alignment="left",
+                style="simple",
+                width=0.2
+            ),
+            ObjectColumn(
+                name="ftype",
+                label=u"Type",
+                horizontal_alignment="left",
+                width=0.2
+            ),
+            ObjectColumn(
+                name="fsize",
+                label=u"Size",
+                horizontal_alignment="left",
+                format_func=lambda b: b if b else '',
+                width=0.1
+            ),
+            ObjectColumn(
+                name="raw_value",
+                label=u"Value",
+                horizontal_alignment="left",
+                width=0.5,
+                style='readonly',
+                format_func=lambda b: str(b),
+            ),
+        ],
+        editable=False,
+        deletable=True,
+        sortable=False,
+        selection_mode='rows',
+        orientation='vertical',
+
+        auto_size=True,
+        # row_factory=RowModel,
+        # show_toolbar=True,
+        rows=3,
+        # handler for selection:
+        on_select='controller.handle_row_select',
+        selected='object.selected_rows',
+        menu=Menu(
+            Action(
+                id='data_explorer_select_all',
+                name=u'全选',
+                action='_menu_select_all',
+                enabled_when='len(object.var_list)>0'),
+            Separator(),
+            Action(
+                id='data_explorer_import',
+                name=u'导入...',
+                action='_menu_import'),
+            Separator(),
+            Action(
+                id='data_explorer_export_selected',
+                name=u'导出选中...',
+                action='_menu_do_export_selected',
+                enabled_when='len(object.var_list)>0'),
+            Action(
+                id='data_explorer_export_all',
+                name=u'导出全部...',
+                action='_menu_do_export',
+                enabled_when='len(object.var_list)>0'),
+        )
+    )
+
+    traits_view = View(
+        VGroup(
+            VSplit(
+                # explorer for all data
+                HGroup(
+                    Label(' '),
+                    UCustom('object.var_list', editor=table_editor),
+                    Label(' '),
+                ),
+                # single data inspector
+                VGroup(
+                    HGroup(
+                        Label(' '),
+                        UReadonly('controller.path'),
+                        Label(' '),
+                    ),
+                    HGroup(
+                        Label(' '),
+                        UCustom('controller.inspector.editor_buffer', editor=variable_inspector),
+                        Label(' '),
+                    ),
+                ),
+                # command line tool
+                HGroup(
+                    Label(' '),
+                    UItem(
+                        "object.var_space",
+                        editor=ShellEditor(
+                            share=True,
+                            command_executed='object.command_executed',
+                            command_to_execute='object.command_to_execute',
+                        ),
+                        width=450,
+                        tooltip=u'Enter the statement and press Enter',
+                        has_focus=True,
+                    ),
+                    Label(' '),
+                ),
+
+            ),
+            VGroup(
+                Label(' '),
+            )
+        ),
+        width=600,
+        height=700,
+        resizable=False,
+        title=u'数据浏览器',
+        # handler=HandleEvent
+    )
+
 
 model = VariableExplorerModel
 
 if __name__ == '__main__':
     model = model()
     event_bus = EventBus()
-    VariableExplorer(model=model, event_bus=event_bus).configure_traits()
+    DataExplorer(model=model, event_bus=event_bus).configure_traits()

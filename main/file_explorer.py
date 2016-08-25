@@ -710,34 +710,34 @@ file_tree_editor = \
 view = View(
     VGroup(
         HGroup(
-            Label(u' '),
+            Label(' '),
             Item(
                 name='location',
                 editor = EnumEditor(name = 'favorites'),
                 show_label=False,
                 tooltip='Favorites'
             ),
-            Label(u' '),
+            Label(' '),
         ),
         HGroup(
-            Label(u' '),
+            Label(' '),
             Item(
                 name="fs_tree",
                 style="custom",
                 editor=file_tree_editor,
                 show_label=False,
             ),
-            Label(u' '),
+            Label(' '),
         ),
         HGroup(
-            Label(u' '),
+            Label(' '),
             Item(
                 name='user_path',
                 style="custom", 
                 editor=TextEditor(auto_set=False, enter_set=True, multi_line=False),
                 show_label=False
             ),
-            Label(u' '),
+            Label(' '),
         ),
     ),
     width=600,
