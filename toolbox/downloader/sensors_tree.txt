@@ -1201,16 +1201,4 @@
             ],
         },
     },
-}[2015-04-08 13:01:31,440:INFO]:You have successfully logged into the data center.
-[2015-04-08 13:14:52,016:INFO]:You have successfully logged into the data center.
-[2015-04-08 13:24:02,802:INFO]:You have successfully logged into the data center.
-[2015-04-08 13:26:38,921:INFO]:You have successfully logged into the data center.
-[2015-04-08 14:28:23,778:INFO]:You have successfully logged into the data center.
-[2015-04-08 14:29:01,437:INFO]:You have successfully logged into the data center.
-[2015-04-08 14:29:30,428:INFO]:You have successfully logged into the data center.
-[2015-04-08 15:16:43,421:INFO]:You have successfully logged into the data center.
-[2015-04-08 15:17:15,987:INFO]:You have successfully logged into the data center.
-[2015-04-08 15:18:52,694:INFO]:You have successfully logged into the data center.
-[2015-04-08 14:54:31,746:INFO]:You have successfully logged into the data center.
-[2015-04-08 15:25:49,198:INFO]:You have successfully logged into the data center.
-[2015-04-08 15:25:49,404:INFO]:None
+}

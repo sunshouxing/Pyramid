@@ -174,16 +174,15 @@ class DataCenter():
 
         return file_ids
 
-    def collect_download_tasks(self, date):
-        # download_tasks = []
+    def collect_download_tasks(self, date, channels=None):
+        if channels is None:
+            channels = self.sensors
 
-        for sensor in self.sensors:
-            file_ids = self.search_data_files(sensor, date)
-
+        for channel in channels:
+            file_ids = self.search_data_files(channel, date)
             if file_ids:
                 src_url = DataCenter.DATA_DOWNLOAD_URL_TEMPLATE.format(",".join(file_ids))
-                dst_file = os.path.join(date, sensor + ".ZIP")
+                dst_file = os.path.join(date, channel + ".ZIP")
                 yield src_url, dst_file
-                # download_tasks.append((src_url, dst_file))
 
-        # return download_tasks
+# EOF
