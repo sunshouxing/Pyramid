@@ -142,7 +142,8 @@ def scanfolder(path):
     except:
         return []
 
-class EFileExplorerError(Exception):
+
+class FileExplorerError(Exception):
     """ Generic error in File Explorer """
     pass
 
@@ -180,19 +181,6 @@ class TreeEditorEx(TreeEditor):
     def _get_custom_editor_class(self):
         return PatchedEditor
 
-
-# ############################################
-#
-# Shortcuts
-#
-# ############################################
-
-
-# ############################################
-#
-# Models
-#
-# ############################################
 
 class FileSystemEntity(TreeNodeObject):
     """ Abstract node in a filesystem """
