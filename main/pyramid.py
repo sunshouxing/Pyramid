@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 # ---- Imports -----------------------------------------------------------
-from traits.api import HasTraits, Instance, List
+from traits.api import \
+    HasTraits, Str, Button, Instance, List
 from traitsui.api import \
-    View, UCustom, VGroup, HSplit, Tabbed, Menu, MenuBar, Action, ToolBar, ListEditor
+    View, UItem, UCustom, HGroup, VGroup, HSplit, VSplit, Tabbed, Include, \
+    Menu, MenuBar, Action, ToolBar, ListEditor, spring
 from pyface.api import ImageResource
 
 from event_bus import EventBus
@@ -13,10 +15,52 @@ from main.console import Console
 from main.component import MainUIComponent
 from main.event_log import EventLog
 
+from main.console import Console
+
+class DataExplore(MainUIComponent):
+    def __init__(self):
+        super(DataExplore, self).__init__()
+        self.name = u'数据浏览器'
+
+    custom_view = View(
+        image=ImageResource('./icons/glyphicons-120-table.png'),
+    )
+
+
+class FileExplore(MainUIComponent):
+    def __init__(self):
+        super(FileExplore, self).__init__()
+        self.name = u'文件浏览器'
+
+    custom_view = View(
+        image=ImageResource('./icons/glyphicons-692-tree-structure.png')
+    )
+
 
 class MainUI(HasTraits):
     """ Main window which combines several views
     """
+
+    # navigator tools
+    navigators = List(MainUIComponent)
+
+    # tools to operate and view data
+    data_area = List(MainUIComponent)
+
+    # auxiliary tools
+    auxiliaries = List(MainUIComponent)
+
+    def __init__(self):
+        super(MainUI, self).__init__()
+
+        # add file explorer to navigators area
+        self.navigators.append(FileExplore())
+        # add data explorer to data area
+        self.data_area.append(DataExplore())
+        # add console and system log to auxiliary tools
+        self.auxiliaries.append(Console())
+        self.auxiliaries.append(FileExplore())
+
     # data_explorer = Instance(DataExplorer)
     # file_explorer = Instance(FileExplorer)
     #
@@ -97,6 +141,43 @@ class MainUI(HasTraits):
     tool_bar = ToolBar()
 
     traits_view = View(
+        HSplit(
+            UCustom(
+                'navigators',
+                editor=ListEditor(
+                    use_notebook=True,
+                    show_notebook_menu=True,
+                    dock_style='tab',
+                    page_name='.name',
+                    # deletable=True,
+                ),
+                width=0.25,
+            ),
+            VSplit(
+                UCustom(
+                    'data_area',
+                    editor=ListEditor(
+                        use_notebook=True,
+                        show_notebook_menu=True,
+                        dock_style='tab',
+                        page_name='.name',
+                        # deletable=True,
+                    ),
+                    height=0.7,
+                ),
+                UCustom(
+                    'auxiliaries',
+                    editor=ListEditor(
+                        use_notebook=True,
+                        show_notebook_menu=True,
+                        dock_style='tab',
+                        page_name='.name',
+                        # deletable=True,
+                    ),
+                    height=0.3,
+                ),
+            ),
+        ),
         # HSplit(
         #     Tabbed(UCustom(name='file_explorer', width=0.2, label=u'文件浏览器')),
         #

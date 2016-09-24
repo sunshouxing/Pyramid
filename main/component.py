@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
-# ---- Imports -----------------------------------------------------------
-from pyface.api import ImageResource
-from traits.api import HasTraits, Unicode, Str
+# ---- [Imports] --------------------------------------------------------------
+from traits.api import SingletonHasTraits, Unicode
 from traitsui.api import View, Include, UItem
 
 
-class MainUIComponent(HasTraits):
+class MainUIComponent(SingletonHasTraits):
     name = Unicode
 
     traits_view = View(
-        UItem('name'),
+        # main ui components' common view item should be added here
+        # UItem('name'),
         Include('custom_view'),
-        icon=ImageResource('../icons/glyphicons-120-table.png'),
     )
 
     def __int__(self, *args, **traits):

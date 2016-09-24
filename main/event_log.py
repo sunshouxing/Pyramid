@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 
 # ---- Imports -----------------------------------------------------------
-from traits.api import HasTraits, Str, Code, Button
-from traitsui.api import HGroup, VGroup, UReadonly, UCustom, spring, Controller
 from pyface.api import ImageResource
-
-from main.component import MainUIComponent
+from traits.api import HasTraits, Str, Code, Button
+from traitsui.api import \
+    View, HGroup, VGroup, UReadonly, UCustom, spring, Controller
 
 
 class LogModel(HasTraits):
     log = Code
-
-    def __init__(self, *args, **traits):
-        super(LogModel, self).__init__(*args, **traits)
 
     def write(self, text):
         self.log += text
@@ -29,13 +25,15 @@ class EventLog(Controller):
         style='toolbar'
     )
 
-    custom_view = HGroup(
-        VGroup(
-            UCustom('handler.clear_button', tooltip=u'清除日志'),
-            spring,
+    custom_view = View(
+        HGroup(
+            VGroup(
+                UCustom('handler.clear_button', tooltip=u'清除日志'),
+                spring,
+            ),
+            '_',
+            UReadonly('log'),
         ),
-        '_',
-        UReadonly('log'),
     )
 
     def __init__(self, *args, **traits):

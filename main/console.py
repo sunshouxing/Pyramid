@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# ---- Imports -----------------------------------------------------------
+# ---- [Imports] ---------------------------------------------------------------
 from traits.api import Str, List, Dict, Event, Bool
-from traitsui.api import HGroup, VGroup, UItem, ShellEditor
+from traitsui.api import HGroup, UItem, ShellEditor
 
-from main.component import MainUIComponent
 import workspace
+from main.component import MainUIComponent
 
 
 class Console(MainUIComponent):
@@ -17,8 +17,6 @@ class Console(MainUIComponent):
     history_commands = List(Str)
 
     custom_view = HGroup(
-        VGroup(UItem('history_commands')),
-        '_',
         UItem(
             'environment',
             editor=ShellEditor(
@@ -33,17 +31,8 @@ class Console(MainUIComponent):
 
     def __init__(self, *args, **traits):
         super(Console, self).__init__(*args, **traits)
-        self.name = u'命令行'
+        self.name = u'控制台'
         self.environment = workspace.get_data()
-
-    def _command_executed_fired(self, command):
-        # FIXME delete debug info
-        print 'command executed changed: ', command
-        # self.history_commands.append(self.command_executed)
-
-    def _command_to_execute_fired(self, command):
-        # FIXME delete debug info
-        print 'command to execute changed: ', command
 
 
 if __name__ == '__main__':
