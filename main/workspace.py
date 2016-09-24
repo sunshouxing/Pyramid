@@ -1,11 +1,26 @@
 # -*- coding: utf-8 -*-
 
-r""" The global workspace environment """
+""" The global workspace environment
+"""
 
-DATA = {}
+# ---- Import -------------------------------------------------------------
+# from traits.api import HasTraits, Dict, List
+# from common import singleton
+#
+# @singleton
+# class Workspace(HasTraits):
+#     data = Dict
+#     fits = List
 
-FITS = {}
 
-SAMPLES = {}
+def get_data():
+    return get_data.data
+
+def get_fits():
+    return get_fits.fits
+
+get_data.data = {}
+
+get_fits.fits = {}
 
 # EOF

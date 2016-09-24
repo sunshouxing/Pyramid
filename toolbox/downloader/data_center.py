@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
 # ---- Imports ---------------------------------------------------------------------------
+import cookielib
+import json
+import logging
+import os
+import re
 import urllib
 import urllib2
-import cookielib
-import logging
-import json
-import re
-import os
-
-from xml.dom import minidom
-from urllib2 import URLError, HTTPError, HTTPCookieProcessor
 import urlparse
-import datetime
-import subprocess
+from urllib2 import URLError, HTTPCookieProcessor
+from xml.dom import minidom
+
 
 # # "这是一个传感器数据查询链接"
 # # TARGET_URL = "http://mpeqhealth.shgltz.com/web/m/m04/channel-data-file!list?channelCode=SWS0601-DS"
@@ -35,7 +33,7 @@ def parse_with_json(content):
     return json.loads(content)
 
 
-class DataCenter():
+class DataCenter(object):
     """
     DataCenter是上海闵浦二桥结构健康监测系统--数据中心的一个抽象，用户可以使用它来进行登录认证，
     查询数据连接地址以及自动下载数据。

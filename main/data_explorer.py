@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# ---- Import ------------------------------------------------------------
+# ---- Import -------------------------------------------------------------
 import json
 from operator import itemgetter
 
@@ -17,6 +17,8 @@ from data_common import *
 from data_inspector import \
     DataInspectorRecord, DataInspectorSequence, DataInspectorDict
 from event_bus import EventBus
+
+import workspace
 
 demo_data = {
     's': 'aaa',
@@ -126,14 +128,15 @@ class DataModel(HasTraits):
     # list of RowModels represents data in data_space, used for both view and export
     data_list = List(RowModel)
     # python environment
-    data_space = Dict
+    workspace = Instance()
+    data_space = DelegatesTo('workspace', prefix='data')
+
     # list of RowModels - for multi-selection (filtered subset for export)
     selected_rows = List(RowModel)
 
-    def __init__(self, *args, **traits):
-        HasTraits.__init__(self, *args, **traits)
-        if not self.data_space:
-            self.data_space = demo_data
+    def __init__(self, workspace, **traits):
+        super(DataModel, self).__init__(**traits)
+        self.workspace = workspace
 
     # --------------------------------------
     # DataModel trait listener
@@ -302,6 +305,8 @@ class DataModel(HasTraits):
 
 
 class DataInspector(Controller):
+    # ---- Traits definition ----------------------------------------------
+
     # event used to response data_inspector's cell clicked
     cell_clicked = Event
     # selected cell details, used as data_inspector's selected parameter
@@ -311,12 +316,38 @@ class DataInspector(Controller):
     path_tags = List
     data_label = Property(depends_on='path_tags,inspector_label')
 
+    # ---- View definition ------------------------------------------------
+    inspector_editor = TableEditor(
+        columns_name='editor_columns',
+        selection_mode='cell',
+        selected='selected_cell',
+        rows=3,
+        sortable=False,
+        auto_size=True,
+        edit_on_first_click=False,
+        click='handler.cell_clicked',
+        format_func=lambda v: '' if v is None else v,
+    )
+
+    taints_view = View(
+        VGroup(
+            HGroup(
+                '10',
+                UReadonly('handler.data_label'),
+                '10',
+            ),
+            HGroup(
+                '10',
+                UCustom('editor_buffer', editor=inspector_editor),
+                '10',
+            ),
+        ),
+    )
+
     def __init__(self, *args, **traits):
         super(DataInspector, self).__init__(*args, **traits)
 
-    # --------------------------------------
-    # trait listeners
-    # --------------------------------------
+    # ---- Traits listeners ----------------------------------------------
     def _cell_clicked_fired(self):
         inspector_row, column = self.selected_cell
 
@@ -349,35 +380,7 @@ class DataInspector(Controller):
     @cached_property
     def _get_data_label(self):
         return u'{}{}'.format(''.join(self.path_tags), self.inspector_label)
-    # --------- end of listeners -----------
 
-    # ---- View definition -----------------------------------------------
-    inspector_editor = TableEditor(
-        columns_name='editor_columns',
-        selection_mode='cell',
-        selected='selected_cell',
-        rows=3,
-        sortable=False,
-        auto_size=True,
-        edit_on_first_click=False,
-        click='handler.cell_clicked',
-        format_func=lambda v: '' if v is None else v,
-    )
-
-    taints_view = View(
-        VGroup(
-            HGroup(
-                '10',
-                UReadonly('handler.data_label'),
-                '10',
-            ),
-            HGroup(
-                '10',
-                UCustom('editor_buffer', editor=inspector_editor),
-                '10',
-            ),
-        ),
-    )
 # end of DataInspector definition
 
 
@@ -390,8 +393,6 @@ class DataExplorer(Controller):
     command = DelegatesTo('event_bus')
     # delegation of event bus' command arguments
     args = DelegatesTo('event_bus')
-
-    d_inspector = Instance(DataInspector)
 
     # root object to browse variables
     var_root = Any
@@ -412,7 +413,6 @@ class DataExplorer(Controller):
     def __init__(self, *args, **traits):
         super(DataExplorer, self).__init__(*args, **traits)
         self.inspector = DataInspectorRecord()
-        self.d_inspector = DataInspector(model=self.inspector)
         self.var_root = self.model.data_space
         # add notification handler to reflect val_space changes in the inspector
         self.model.on_trait_change(self._update_inspector, 'data_list[]')
@@ -643,7 +643,7 @@ class DataExplorer(Controller):
         orientation='vertical',
         auto_size=True,
         rows=3,
-        on_select='controller.handle_row_select',
+        on_select='handler.handle_row_select',
         selected='object.selected_rows',
         menu=Menu(
             Action(
@@ -673,10 +673,9 @@ class DataExplorer(Controller):
     data_inspector = TableEditor(
         columns_name='handler.inspector.editor_columns',
         selection_mode='cell',
-        selected='inspector_selected_cell',
+        selected='handler.inspector_selected_cell',
         rows=3,
         sortable=False,
-        auto_size=True,
         edit_on_first_click=False,
         click='handler.inspector_cell_clicked',
         format_func=lambda v: '' if v is None else v,
@@ -688,7 +687,7 @@ class DataExplorer(Controller):
                 # explorer for all data
                 HGroup(
                     '10',
-                    UCustom('object.data_list', editor=table_editor),
+                    UCustom('data_list', editor=table_editor),
                     '10',
                 ),
                 # single data inspector
@@ -704,24 +703,6 @@ class DataExplorer(Controller):
                         '10',
                     ),
                 ),
-                HGroup('10', UCustom('handler.d_inspector'), '10'),
-                # command line tool
-                HGroup(
-                    '10',
-                    UItem(
-                        "object.data_space",
-                        editor=ShellEditor(
-                            share=True,
-                            # command_executed='object.command_executed',
-                            # command_to_execute='object.command_to_execute',
-                        ),
-                        width=450,
-                        tooltip=u'Enter the statement and press Enter',
-                        has_focus=True,
-                    ),
-                    '10',
-                ),
-
             ),
             VGroup(
                 Label(' '),
@@ -738,6 +719,6 @@ class DataExplorer(Controller):
 model = DataModel
 
 if __name__ == '__main__':
-    model = model()
+    model = model(workspace=workspace)
     event_bus = EventBus()
     DataExplorer(model=model, event_bus=event_bus).configure_traits()

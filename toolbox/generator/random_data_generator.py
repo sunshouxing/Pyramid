@@ -3,6 +3,7 @@
 r""" Random data array generator """
 
 # ---- Imports ---------------------------------------------------------------------------
+from pyface.image_resource import ImageResource
 from scipy import stats
 import numpy as np
 
@@ -92,6 +93,7 @@ class RandomDataGenerator(Controller):
         resizable=True,
         kind="livemodal",
         title=u"随机变量生成器",
+        icon='../../icons/glyphicons-21-home.png',
         buttons=[resample, export],
     )
 
