@@ -108,7 +108,7 @@ def _script_folder():
 
 _os_name = _platform.system().lower()
 
-if _os_name.startswith('windows') :
+if _os_name.startswith('windows'):
 
     def _enum_root():
         import string
@@ -695,44 +695,7 @@ file_tree_editor = \
     )
 
 
-view = View(
-    VGroup(
-        HGroup(
-            Label(' '),
-            Item(
-                name='location',
-                editor = EnumEditor(name = 'favorites'),
-                show_label=False,
-                tooltip='Favorites'
-            ),
-            Label(' '),
-        ),
-        HGroup(
-            Label(' '),
-            Item(
-                name="fs_tree",
-                style="custom",
-                editor=file_tree_editor,
-                show_label=False,
-            ),
-            Label(' '),
-        ),
-        HGroup(
-            Label(' '),
-            Item(
-                name='user_path',
-                style="custom", 
-                editor=TextEditor(auto_set=False, enter_set=True, multi_line=False),
-                show_label=False
-            ),
-            Label(' '),
-        ),
-    ),
-    width=600,
-    height=700,
-    resizable=False,
-    title=u'File Explorer',
-)
+
 
 
 # ############################################
@@ -748,7 +711,44 @@ class FileExplorer(Controller):
     command = DelegatesTo('event_bus')
     args = DelegatesTo('event_bus')
 
-    view = view
+    view = View(
+        VGroup(
+            HGroup(
+                Label(' '),
+                Item(
+                    name='location',
+                    editor=EnumEditor(name='favorites'),
+                    show_label=False,
+                    tooltip='Favorites'
+                ),
+                Label(' '),
+            ),
+            HGroup(
+                Label(' '),
+                Item(
+                    name="fs_tree",
+                    style="custom",
+                    editor=file_tree_editor,
+                    show_label=False,
+                ),
+                Label(' '),
+            ),
+            HGroup(
+                Label(' '),
+                Item(
+                    name='user_path',
+                    style="custom",
+                    editor=TextEditor(auto_set=False, enter_set=True, multi_line=False),
+                    show_label=False
+                ),
+                Label(' '),
+            ),
+        ),
+        width=600,
+        height=700,
+        resizable=False,
+        title=u'File Explorer',
+    )
 
     def _menu_info( self, uinfo, object ):
         print "_menu_info", self.__class__, uinfo, object
@@ -782,8 +782,7 @@ if __name__ == '__main__':
     doctest.testmod(verbose=True)
 
     FileExplorer(
-        model=model(
-        ),
+        model=model(),
         event_bus=EventBus()
     ).configure_traits()
 

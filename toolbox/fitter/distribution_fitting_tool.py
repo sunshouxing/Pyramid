@@ -4,27 +4,25 @@ r"""distribution fitting tool"""
 
 # ---- Imports ---------------------------------------------------------------------------
 import numpy as np
-from traits.api import HasTraits, Instance, Enum, Button, Dict
-from traits.has_traits import on_trait_change
-from traits.trait_types import Str
-from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, Group
-from traitsui.editors import ShellEditor
-from traitsui.handler import Controller
-from traitsui.menu import Action, ActionGroup, Menu, MenuBar, ToolBar
-from pyface.image_resource import ImageResource
-from chaco.api import Plot, ArrayPlotData
-from enable.component_editor import ComponentEditor
 
-from main.workspace import DATA
-from main.workspace import FITS
+from traits.api import \
+    HasTraits, Str, Instance, Enum, Button, Dict, on_trait_change
+from traitsui.api import \
+    View, Item, UItem, HGroup, VGroup, Group, spring, Controller, ShellEditor, \
+    Action, ActionGroup, Menu, MenuBar, ToolBar
+from pyface.api import ImageResource
+from chaco.api import Plot, ArrayPlotData
+from enable.api import ComponentEditor
+
+from main import workspace
 
 
 class DistributionFittingToolController(Controller):
-    config_data_button = Button(u"数据...")
-    new_fit_button = Button(u"新拟合...")
-    manage_fits_button = Button(u"拟合管理...")
-    evaluate_button = Button(u"评估...")
-    exclude_data_button = Button(u"例外...")
+    config_data_button = Button(u'数据...')
+    new_fit_button = Button(u'新拟合...')
+    manage_fits_button = Button(u'拟合管理...')
+    evaluate_button = Button(u'评估...')
+    exclude_data_button = Button(u'例外...')
 
     def _config_data_button_fired(self):
         from toolbox.common import Data, DataManager
@@ -75,6 +73,7 @@ class DistributionFittingTool(HasTraits):
 
     @on_trait_change("current_data_name")
     def data_changed(self):
+        DATA = workspace.get_data()
         data = DATA[self.current_data_name]
         y, x = np.histogram(data, bins=100, normed=True)
         x = (x[:-1] + x[1:]) / 2
@@ -94,7 +93,8 @@ class DistributionFittingTool(HasTraits):
 
     @on_trait_change("current_fit_name")
     def fit_changed(self):
-        fit = FITS[self.current_fit_name]
+        fits = workspace.get_fits()
+        fit = fits[self.current_fit_name]
 
         x = self.data["x"]
         z = fit.pdf(x)
