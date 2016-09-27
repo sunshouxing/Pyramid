@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
 # ---- [Imports] ---------------------------------------------------------------
-from traits.api import Str, List, Dict, Event, Bool
-from traitsui.api import HGroup, UItem, ShellEditor
+from traits.api import \
+    Bool, Str, Instance, List, Event, DelegatesTo
+from traitsui.api import \
+    UItem, HGroup, ShellEditor
 
-import workspace
 from main.component import MainUIComponent
+from main.workspace import Workspace, workspace
 
 
 class Console(MainUIComponent):
-    environment = Dict
+    workspace = Instance(Workspace)
+    environment = DelegatesTo('workspace', prefix='data_space')
 
     # record history commands for future review
     command_to_execute = Event
@@ -32,7 +35,7 @@ class Console(MainUIComponent):
     def __init__(self, *args, **traits):
         super(Console, self).__init__(*args, **traits)
         self.name = u'控制台'
-        self.environment = workspace.get_data()
+        self.workspace = workspace
 
 
 if __name__ == '__main__':

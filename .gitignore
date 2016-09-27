@@ -2,4 +2,5 @@
 .idea
 logs/*
 cookies.txt
+favorites.txt
 /test

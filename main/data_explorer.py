@@ -18,7 +18,7 @@ from data_inspector import \
     DataInspectorRecord, DataInspectorSequence, DataInspectorDict
 from event_bus import EventBus
 
-import workspace
+from main.workspace import Workspace, workspace
 
 demo_data = {
     's': 'aaa',
@@ -127,31 +127,26 @@ class DataModel(HasTraits):
 
     # list of RowModels represents data in data_space, used for both view and export
     data_list = List(RowModel)
-    # python environment
-    workspace = Instance()
-    data_space = DelegatesTo('workspace', prefix='data')
+
+    workspace = Instance(Workspace)
+    data_space = DelegatesTo('workspace')
 
     # list of RowModels - for multi-selection (filtered subset for export)
     selected_rows = List(RowModel)
 
-    def __init__(self, workspace, **traits):
-        super(DataModel, self).__init__(**traits)
+    def __init__(self, *args, **traits):
+        super(DataModel, self).__init__(*args, **traits)
         self.workspace = workspace
 
     # --------------------------------------
     # DataModel trait listener
     # --------------------------------------
-    # def _command_to_execute_fired(self, v):
-    #     print 'command_to_execute: ', v
 
     def _selected_rows_changed(self):
         # FIXME debug info
         print('DEBUG: {} rows selected.'.format(len(self.selected_rows)))
 
     def _data_space_changed(self):
-        # FIXME debug info
-        print('DEBUG: var space changed')
-
         # clear the variables set and the selection:
         self.selected_rows[:] = []
         # update view
@@ -181,15 +176,15 @@ class DataModel(HasTraits):
 
             return buff
 
-        buff = {}
+        _buffer = {}
 
         # select source for export
         source = (selection_only and self.selected_rows or self.data_list)
 
         for order, row in enumerate(source):
-            buff[row.fname] = parse_node(row.raw_value)
-            buff[row.fname]['order'] = order
-        return buff
+            _buffer[row.field_name] = parse_node(row.raw_value)
+            _buffer[row.field_name]['order'] = order
+        return _buffer
 
     def from_json_dict(self, d):
         def parse_item_info(info):
@@ -291,7 +286,7 @@ class DataModel(HasTraits):
 
     def to_mat_file(self, file_name, selection_only=False):
         # buff = self.to_json_dict()
-        buff = {}
+        _buffer = {}
 
         # select source for export:
         if selection_only:
@@ -300,8 +295,8 @@ class DataModel(HasTraits):
             source = self.data_list
 
         for row in source:
-            buff[row.fname] = row.raw_value
-        sio.savemat(file_name, buff)
+            _buffer[row.field_name] = row.raw_value
+        sio.savemat(file_name, _buffer)
 
 
 class DataInspector(Controller):
@@ -387,6 +382,8 @@ class DataInspector(Controller):
 class DataExplorer(Controller):
     """ sub-application controller
     """
+    tab_name = u'数据浏览器'
+
     # inter-app commands and notifications
     event_bus = Instance(EventBus)
     # delegation of event bus' command
@@ -422,21 +419,18 @@ class DataExplorer(Controller):
     # --------------------------------------
     def _command_changed(self):
         """ Command dispatcher """
-        command = self.command
-        # FIXME debug info
-        print('DEBUG: command changed to "{}"'.format(command))
+        command, arguments = self.command, self.args
+
         # if command is not "empty"
         if command:
             # find command handler in own methods
             try:
-                handler = getattr(self, '_{}'.format(command))
-                # FIXME debug info
-                print('DEBUG: response command "{}" with handler {}'.format(command, handler.__name__))
+                handler = getattr(self, '_{}'.format(command).lower())
             except AttributeError:
                 # ignore command if handler not defined
                 return
 
-            handler(self.args)
+            handler(arguments)
 
     @cached_property
     def _get_data_label(self):
@@ -502,8 +496,9 @@ class DataExplorer(Controller):
     # Event/command handlers
     # ---------------------------------------
 
-    def _CMD_IMPORT(self, file_name):
-        """ Handler for external command """
+    def _import_data(self, file_name):
+        """ Handler for data explorer's import data menu
+        """
         # reset inspector:
         # self.inspector = DataInspectorRecord()
 
@@ -511,31 +506,29 @@ class DataExplorer(Controller):
         if ext == 'mat':
             # self.model.from_json_dict(buff)
             self.model.from_mat_file(file_name)
-
         elif ext == 'json':
             buff = ''
             with open(file_name, 'rb') as f:
                 buff = f.read()
             model = json.loads(buff)
             self.model.from_json_dict(model)
-
         else:
             raise DataExplorerError('Unsupported file format: {}'.format(ext))
-
         # update initial selection - first row:
         if len(self.model.data_list) > 0:
             self.handle_row_select([self.model.data_list[0]])
 
-    def _CMD_EXPORT_SELECTED(self, file_name):
-        """ Handler for external command """
+    def _export_selected_data(self, file_name):
+        """ Handler for data explorer's export selected data menu
+        """
         self.__switch_command_export(file_name, selection_only=True)
 
-    def _CMD_EXPORT(self, file_name):
-        """ Handler for external command """
+    def _export_data(self, file_name):
+        """ Handler for data explorer's export data menu
+        """
         self.__switch_command_export(file_name, selection_only=False)
 
     def __switch_command_export(self, file_name, selection_only):
-        """ Helps to avoid repeated code """
         ext = file_name.split('.')[-1]
         if ext == 'mat':
             self.model.to_mat_file(file_name, selection_only)
@@ -556,13 +549,13 @@ class DataExplorer(Controller):
         root.append(RowModel(name='', value=''))
         del root[-1]
 
-    # ---------------------------------------
-    # Menu actions
-    # ---------------------------------------
-    def _menu_select_all(self, uiinfo, selection):
+    # --------------------------------------- #
+    #            Menu actions                 #
+    # --------------------------------------- #
+    def _menu_select_all(self, ui_info, selection):
         """ select all exist rows
         """
-        print selection, uiinfo
+        print selection, ui_info
         self.model.selected_rows = self.model.data_list[:]
         print "selection: {}".format(len(self.model.selected_rows))
 
@@ -578,15 +571,15 @@ class DataExplorer(Controller):
             print("DEBUG: importing data from {}...".format(dialog.path))
             self.event_bus.fire_event('CMD_IMPORT', dialog.path)
 
-    def _menu_do_export_selected(self, uiinfo, selection):
+    def _menu_do_export_selected(self, ui_info, selection):
         """ Handle menu item """
-        self.__switch_menu_export(uiinfo, 'CMD_EXPORT_SELECTED')
+        self.__switch_menu_export(ui_info, 'EXPORT_SELECTED_DATA')
 
-    def _menu_do_export(self, uiinfo, selection):
+    def _menu_do_export(self, ui_info, selection):
         """ Handle menu item """
-        self.__switch_menu_export(uiinfo, 'CMD_EXPORT')
+        self.__switch_menu_export(ui_info, 'EXPORT_DATA')
 
-    def __switch_menu_export(self, info, send_command):
+    def __switch_menu_export(self, info, command):
         """ Helps to avoid repeated code """
 
         dialog = FileDialog(
@@ -597,12 +590,10 @@ class DataExplorer(Controller):
         if dialog.open() == OK:
             import os
             if os.path.exists(dialog.path):
-                message = "File {} already exists. Do you want to overwrite?".formate(dialog.path)
+                message = "File {} already exists. Do you want to overwrite?".format(dialog.path)
                 if confirm(info.ui.control, message) == NO:
                     return
-            # FIXME debug info
-            print('DEBUG: saving data to file {} ...'.format(dialog.path))
-            self.event_bus.fire_event(send_command, dialog.path)
+            self.event_bus.fire_event(command, args=dialog.path)
 
     # ---- View definition -----------------------------------------------
     table_editor = TableEditor(
@@ -716,9 +707,11 @@ class DataExplorer(Controller):
     )
 
 
-model = DataModel
+data_model = DataModel
 
 if __name__ == '__main__':
-    model = model(workspace=workspace)
+    """
+    Test mode
+    """
     event_bus = EventBus()
-    DataExplorer(model=model, event_bus=event_bus).configure_traits()
+    DataExplorer(model=data_model(), event_bus=event_bus).configure_traits()
