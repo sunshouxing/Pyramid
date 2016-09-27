@@ -5,10 +5,11 @@ from pyface.api import ImageResource
 from traits.api import \
     HasTraits, Instance, List
 from traitsui.api import \
-    View, UCustom, HSplit, VSplit, Menu, MenuBar, Action, ToolBar, ListEditor
+    View, UCustom, HSplit, VSplit, Menu, MenuBar, Action, ToolBar, ListEditor, Separator
 
 from common import ICONS_PATH
 from main.console import Console
+from main.event_log import event_log
 from main.data_explorer import DataExplorer, data_model
 from main.event_bus import EventBus
 from main.file_explorer import FileExplorer, file_model
@@ -42,6 +43,7 @@ class MainUI(HasTraits):
         ))
         # add console and system log to auxiliary tools
         self.auxiliaries.append(Console())
+        self.auxiliaries.append(event_log)
 
     # ---- [View definition] ------------------------------------------------
     # design menu bar
@@ -105,7 +107,68 @@ class MainUI(HasTraits):
     )
 
     # design tool bar
-    tool_bar = ToolBar()
+    tool_bar = ToolBar(
+        Action(
+            image=ImageResource('glyphicons-73-bookmark.png', search_path=[ICONS_PATH]),
+            tooltip=u'收藏夹',
+            action='print_figure'
+        ),
+        Action(
+            image=ImageResource('glyphicons-359-file-import.png', search_path=[ICONS_PATH]),
+            tooltip=u'导入数据',
+            action='zoom_in'
+        ),
+        Action(
+            image=ImageResource('glyphicons-360-file-export.png', search_path=[ICONS_PATH]),
+            tooltip=u'导出数据',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-365-cloud-download.png', search_path=[ICONS_PATH]),
+            tooltip=u'数据下载器',
+            action='pan'
+        ),
+        Action(
+            image=ImageResource('glyphicons-416-disk-open.png', search_path=[ICONS_PATH]),
+            tooltip=u'数据读取器',
+            action='pan'
+        ),
+        Action(
+            image=ImageResource('glyphicons-42-charts.png', search_path=[ICONS_PATH]),
+            tooltip=u'数据生成器',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-790-filter-applied.png', search_path=[ICONS_PATH]),
+            tooltip=u'滤波器',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-41-stats.png', search_path=[ICONS_PATH]),
+            tooltip=u'拟合器',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-488-fit-image-to-frame.png', search_path=[ICONS_PATH]),
+            tooltip=u'全屏',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-487-fit-frame-to-image.png', search_path=[ICONS_PATH]),
+            tooltip=u'退出全屏',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-281-settings.png', search_path=[ICONS_PATH]),
+            tooltip=u'设置',
+            action='zoom_out'
+        ),
+        Action(
+            image=ImageResource('glyphicons-122-message-empty.png', search_path=[ICONS_PATH]),
+            tooltip=u'联系我们',
+            action='zoom_out'
+        ),
+    )
 
     traits_view = View(
         HSplit(
@@ -116,7 +179,6 @@ class MainUI(HasTraits):
                     show_notebook_menu=True,
                     dock_style='tab',
                     page_name='.tab_name',
-                    # deletable=True,
                 ),
                 width=0.25,
             ),
@@ -128,7 +190,6 @@ class MainUI(HasTraits):
                         show_notebook_menu=True,
                         dock_style='tab',
                         page_name='.tab_name',
-                        # deletable=True,
                     ),
                     height=0.7,
                 ),
@@ -138,8 +199,7 @@ class MainUI(HasTraits):
                         use_notebook=True,
                         show_notebook_menu=True,
                         dock_style='tab',
-                        page_name='.name',
-                        # deletable=True,
+                        page_name='.tab_name',
                     ),
                     height=0.3,
                 ),
