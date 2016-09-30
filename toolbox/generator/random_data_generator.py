@@ -3,7 +3,6 @@
 r""" Random data array generator """
 
 # ---- Imports ---------------------------------------------------------------------------
-from pyface.image_resource import ImageResource
 from scipy import stats
 import numpy as np
 
@@ -14,8 +13,8 @@ from traitsui.api import \
 from chaco.api import Plot, ArrayPlotData
 from enable.api import ComponentEditor
 
-from ..common.range_selector import RangeSelector
-from main.workspace import DATA
+from toolbox.common.range_selector import RangeSelector
+from main.workspace import workspace
 
 
 class RandomDataGenerator(Controller):
@@ -59,7 +58,7 @@ class RandomDataGenerator(Controller):
             title=u'数据命名',
             width=250,
         ), kind='livemodal')
-        DATA[self.model.samples_name] = self.model.samples
+        workspace.data[self.model.samples_name] = self.model.samples
         # close the random data generator window after data exported
         info.ui.control.close()
 

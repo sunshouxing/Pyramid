@@ -1,48 +1,30 @@
 # -*- coding: utf-8 -*-
 
-import platform as _platform
+import os
+import os.path as osp
+import platform
 import time
-from os import \
-    listdir as _listdir, \
-    stat as _stat
-from os.path import \
-    join as _join, \
-    isdir as _isdir, \
-    isfile as _isfile, \
-    split as _split, \
-    splitext as _splitext, \
-    abspath as _abspath, \
-    dirname as _dirname, \
-    exists as _exists, \
-    sep as _sep
 
 from traits.api import \
     HasTraits, Bool, Str, Any, Tuple, List, \
     Instance, Property, Event, DelegatesTo, cached_property
 from traitsui.api import \
     TextEditor, TreeNodeObject, EnumEditor, ObjectTreeNode, \
-    View, Item, UItem, UReadonly, UCustom, \
-    Label, Group, HGroup, VGroup, Controller, TreeEditor, \
-    Menu, Action, Separator
+    View, UItem, UReadonly, UCustom, \
+    Group, HGroup, VGroup, Controller, TreeEditor, Menu, Action, Separator
+from traitsui.qt4.tree_editor import SimpleEditor
 
-from event_bus import EventBus
+from common import PROJECT_HOME
+from main.book_marks import Bookmarks
+from main.event_bus import EventBus
 
-
-# from traitsui.file_dialog \
-#     import save_file, open_file
-
-# ############################################
-#
-# Helpers
-#
-# ############################################
 
 def _script_folder():
     import sys
-    return _abspath(_dirname(sys.argv[0]))
+    return osp.abspath(osp.dirname(sys.argv[0]))
 
 
-_os_name = _platform.system().lower()
+_os_name = platform.system().lower()
 
 if _os_name.startswith('windows'):
 
@@ -51,11 +33,11 @@ if _os_name.startswith('windows'):
         from ctypes import windll
 
         drives = []
-        bitmask = windll.kernel32.GetLogicalDrives()
+        bit_mask = windll.kernel32.GetLogicalDrives()
         for letter in string.uppercase:
-            if bitmask & 1:
-                drives.append('{}:{}'.format(letter, _sep))
-            bitmask >>= 1
+            if bit_mask & 1:
+                drives.append('{}:{}'.format(letter, osp.sep))
+            bit_mask >>= 1
         return drives
 
 elif _os_name.startswith('linux'):
@@ -68,14 +50,14 @@ else:
 
     def _enum_root():
         path = _script_folder()
-        while _split(path)[1]:
-            path = _split(path)[0]
+        while osp.split(path)[1]:
+            path = osp.split(path)[0]
         return path
 
 
-def scanfolder(path):
+def scan_folder(path):
     try:
-        return _listdir(path)
+        return os.listdir(path)
     except:
         return []
 
@@ -85,11 +67,6 @@ class FileExplorerError(Exception):
     pass
 
 
-# patched version of TreeEditor
-
-from traitsui.qt4.tree_editor import SimpleEditor
-
-
 class PatchedEditor(SimpleEditor):
     def init(self, parent):
         SimpleEditor.init(self, parent)
@@ -97,16 +74,16 @@ class PatchedEditor(SimpleEditor):
         print "tree_model", tree_model
         tree_model.editor = self
 
-    def _create_item(self, nid, node, object, index=None):
+    def _create_item(self, nid, node, entry, index=None):
         """ Create  a new TreeWidgetItem as per word_wrap policy.
 
         Index is the index of the new node in the parent:
             None implies append the child to the end. """
-        cnid = SimpleEditor._create_item(self, nid, node, object, index)
+        cnid = SimpleEditor._create_item(self, nid, node, entry, index)
 
         # set reference to the toolkit widget:
         # object.deferred = False
-        object.nid = cnid
+        entry.nid = cnid
 
         return cnid
 
@@ -141,19 +118,18 @@ class FileSystemEntity(TreeNodeObject):
     def _get_display_tooltip(self):
         """ display_tooltip = Property """
         info = self.info
-        return \
-            "{!s}: {!s} \nModified: {!s}\nSize:{!s} bytes" \
-                .format(self.name, self.sys_name, info['last_modified'], info['size'])
+        return "{!s}: {!s} \nModified: {!s}\nSize:{!s} bytes".format(
+            self.name, self.sys_name, info['last_modified'], info['size'])
 
     def _get_path(self):
         """ path = Property """
-        return _join(self.parent.path, self.sys_name)
+        return osp.join(self.parent.path, self.sys_name)
 
     @cached_property
     def _get_info(self):
         """ info = Property """
         try:
-            (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = _stat(self.path)
+            (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(self.path)
             return dict(
                 size=str(size),
                 last_modified=time.ctime(mtime)
@@ -174,9 +150,9 @@ class FileSystemEntity(TreeNodeObject):
     def init_items(self):
         pass
 
-    # ----------------------------------------
-    # Intrface / protocol for TreeNodeObject:
-    # ----------------------------------------
+    # ---------------------------------------- #
+    # Interface / protocol for TreeNodeObject  #
+    # ---------------------------------------- #
     def tno_get_label(self, node):
         return self.sys_name
 
@@ -220,7 +196,7 @@ class FileEntity(FileSystemEntity):
     name = Str('File')
 
     def _get_extension(self):
-        _, ext = _splitext(self.sys_name)
+        _, ext = osp.splitext(self.sys_name)
         return ext
 
 
@@ -270,11 +246,11 @@ class FolderEntity(FileSystemEntity):
     def _get_path(self):
         if self.sys_name:
             if self.parent is not None:
-                return _join(self.parent.path, self.sys_name)
+                return osp.join(self.parent.path, self.sys_name)
             return self.sys_name
         return None
 
-    def _active_child_name_changed(self, value):
+    def _active_child_name_changed(self):
         if self.deferred:
             self.deferred = False
         found = None
@@ -293,7 +269,7 @@ class FolderEntity(FileSystemEntity):
     def _get_active_child(self):
         return self._active_child
 
-    def _force_expand_changed(self, value):
+    def _force_expand_changed(self):
         if self.nid:
             self.nid.setExpanded(self.force_expand)
 
@@ -324,18 +300,18 @@ class FolderEntity(FileSystemEntity):
         dirs = []
         files = []
         path = self.path
-        for name in scanfolder(path):
+        for name in scan_folder(path):
             if name.startswith('.'):
                 continue
-            cur_path = _join(path, name)
-            if _isdir(cur_path):
+            cur_path = osp.join(path, name)
+            if osp.isdir(cur_path):
                 item = self._dir_map.get(name, None)
                 if not item:
                     item = FolderEntity(parent=self, sys_name=name)
                     self._dir_map[name] = item
-                dirs.append( item )
-            elif _isfile( cur_path ):
-                _, ext = _splitext( name )
+                dirs.append(item)
+            elif osp.isfile(cur_path):
+                _, ext = osp.splitext(name)
                 if ext in self.filter:
                     item = self._file_map.get(name, None)
                     if not item:
@@ -346,7 +322,7 @@ class FolderEntity(FileSystemEntity):
         dirs.sort(lambda l, r: cmp(l.sys_name.lower(), r.sys_name.lower()))
         files.sort(lambda l, r: cmp(l.sys_name.lower(), r.sys_name.lower()))
 
-        return (dirs + files)
+        return dirs + files
 
 
 class FileSystemTree(FolderEntity):
@@ -384,10 +360,8 @@ class FileSystemTree(FolderEntity):
         Note: This method does not allow to expand tree to the selected node.
         Reason: Underlying QtTreeWidgetItem with its' .setExpanded(True) is
         hidden inside TreeEditor for qt4 toolkit.
-        to-do: try to auto-expand related nodes in a treeview control
+        to-do: try to auto-expand related nodes in a tree view control
         """
-        print '==================='
-
         def walker(node, path_tags):
             """ Recursive function to search node """
 
@@ -416,10 +390,10 @@ class FileSystemTree(FolderEntity):
                 return None
 
         path_tags = []
-        head, tail = _split(path)
+        head, tail = osp.split(path)
         while tail:
             path_tags.append(tail)
-            head, tail = _split(head)
+            head, tail = osp.split(head)
         if head:
             path_tags.append(head)
 
@@ -429,9 +403,6 @@ class FileSystemTree(FolderEntity):
         else:
             print "Cannot find item for path: ", path, path_tags
 
-    def _selected_changed(self, value):
-        print 'selected', self.selected
-
     def _enum_items(self):
         return [
             FolderEntity(
@@ -439,126 +410,46 @@ class FileSystemTree(FolderEntity):
                 sys_name=name,
                 deferred=False
             ) for name in _enum_root()
-            ]
+        ]
 
 
-class BookmarksFileStorage(object):
-    """
-    OS-indepenent storage for filesystem bookmarks.
-    """
-
-    def __init__(self, path):
-        self.path = path
-
-    def _raw_load(self):
-        """ Return encoded list """
-        items = []
-        if _exists(self.path):
-            with open(self.path, 'rb') as f:
-                for row in f:
-                    row = row.strip()
-                    if len(row) > 0:
-                        items.append(row)
-        print "loaded", items
-        return items
-
-    def update(self, path):
-        """
-        Add path to items (if not exists).
-        Update underlying file if necessary.
-        Return True if items were changed.
-        """
-
-        def _encode(path):
-            return path.replace(_sep, ';')
-
-        # encode path, append, sort, store it
-
-        raw_list = self._raw_load()
-
-        indexed_storage = dict([(_path, True) for _path in raw_list])
-
-        # do not add duplicates:
-
-        raw_path = _encode(path)
-
-        print "path", path
-        print 'raw_path', raw_path
-        print 'raw_list', raw_list
-
-        if raw_path in indexed_storage:
-            return False
-
-        raw_list.append(raw_path)
-        raw_list.sort(lambda l, r: cmp(l.lower(), r.lower()))
-
-        with open(self.path, 'wb') as f:
-            f.write("\n".join(raw_list))
-
-        return True
-
-    def items(self):
-        """
-        Return stored boormarks as list.
-        """
-
-        def _decode(path):
-            return path.replace(';', _sep)
-
-        return [_decode(row) for row in self._raw_load()]
-
-
-class FileExplorerModel(HasTraits):
-    """
-    Data model for entire variable explorer
+class FileSystem(HasTraits):
+    """ Data model for entire variable explorer
     """
     fs_tree = Instance(FileSystemTree)
 
     user_path = Str
 
-    favorites = List
-
     location = Str
+
+    # bookmarks to provide a shortcut to data directory
+    bookmarks = Instance(Bookmarks)
+    bookmark_items = DelegatesTo('bookmarks', prefix='items')
 
     def __init__(self, **traits):
         HasTraits.__init__(self, **traits)
         self.fs_tree = FileSystemTree()
+        self.bookmarks = Bookmarks(osp.join(PROJECT_HOME, 'bookmarks.txt'))
 
-        self._bookmarks_storage = BookmarksFileStorage(_join(_script_folder(), 'favorites.txt'))
-        try:
-            self.favorites = self._bookmarks_storage.items()
-        except Exception as e:
-            print e
-            pass
-
-    def _user_path_changed(self, value):
-        print 'My path', self.user_path
+    def _user_path_changed(self):
         self.fs_tree.path = self.user_path
 
-    def _location_changed(self, value):
+    def _location_changed(self):
         location = self.location
         if location:
             self.user_path = location
 
     def add_bookmark(self, path):
-        storage = self._bookmarks_storage
-        if storage.update(path):
-            self.favorites = storage.items()
+        self.bookmarks.add(path)
 
-
-# ############################################
-#
-# Handlers
-#
-# ############################################
-
-_action_import = Action(name='Import', action='_menu_import')
-_action_export = Action(name='Export', action='_menu_export')
-_action_info = Action(name='Info', action='_menu_info')
-_action_refresh = Action(name='Refresh', action='_menu_refresh')
-_action_bookmark = Action(name='Add to favorites', action='_menu_bookmark')
 
 # ---- [View definitions] ------------------------------------------------------
+_action_import = Action(name=u'导入', action='_menu_import')
+_action_export = Action(name=u'导出', action='_menu_export')
+_action_info = Action(name=u'信息', action='_menu_info')
+_action_refresh = Action(name=u'刷新', action='_menu_refresh')
+_action_bookmark = Action(name=u'收藏', action='_menu_bookmark')
+
 no_view = View()
 
 file_entity_details = View(
@@ -607,34 +498,32 @@ file_tree_editor = TreeEditorEx(
 )
 
 
-# ---- [Controllers] -----------------------------------------------------------
 class FileExplorer(Controller):
-    """docstring for FileExplorerController"""
+    """ File explorer used to exchange data with data space.
+    """
     tab_name = u'文件浏览器'
 
+    # the event bus between file system and data space
     event_bus = Instance(EventBus)
-    # command = DelegatesTo('event_bus')
-    # args = DelegatesTo('event_bus')
 
-    view = View(
+    traits_view = View(
         HGroup(
             '10',
             VGroup(
                 Group(
-                    UItem(
+                    UItem(  # bookmark selection
                         name='location',
-                        editor=EnumEditor(name='favorites'),
-                        tooltip='Favorites',
+                        editor=EnumEditor(name='bookmark_items'),
                     ),
                     show_border=True,
                     label=u'收藏夹',
                 ),
                 VGroup(
-                    UCustom(
+                    UCustom(  # file system directory structure
                         name="fs_tree",
                         editor=file_tree_editor,
                     ),
-                    UCustom(
+                    UCustom(  # current path demonstration
                         name='user_path',
                         editor=TextEditor(auto_set=False, enter_set=True, multi_line=False),
                     ),
@@ -653,6 +542,10 @@ class FileExplorer(Controller):
         self.model = model
         self.event_bus = event_bus
 
+    # ------------------------------------- #
+    #         Menu action handlers          #
+    # ------------------------------------- #
+
     def _menu_info(self, info, object):
         print "_menu_info", self.__class__, info, object
 
@@ -669,7 +562,7 @@ class FileExplorer(Controller):
         self.model.add_bookmark(object.path)
 
 
-file_model = FileExplorerModel
+file_model = FileSystem
 
 if __name__ == '__main__':
     """

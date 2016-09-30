@@ -14,7 +14,7 @@ from pyface.api import ImageResource
 from chaco.api import Plot, ArrayPlotData
 from enable.api import ComponentEditor
 
-from main import workspace
+from main.workspace import workspace
 
 
 class DistributionFittingToolController(Controller):
@@ -73,8 +73,7 @@ class DistributionFittingTool(HasTraits):
 
     @on_trait_change("current_data_name")
     def data_changed(self):
-        DATA = workspace.get_data()
-        data = DATA[self.current_data_name]
+        data = workspace.data[self.current_data_name]
         y, x = np.histogram(data, bins=100, normed=True)
         x = (x[:-1] + x[1:]) / 2
 
@@ -93,8 +92,7 @@ class DistributionFittingTool(HasTraits):
 
     @on_trait_change("current_fit_name")
     def fit_changed(self):
-        fits = workspace.get_fits()
-        fit = fits[self.current_fit_name]
+        fit = workspace.fits[self.current_fit_name]
 
         x = self.data["x"]
         z = fit.pdf(x)
@@ -230,7 +228,9 @@ class DistributionFittingTool(HasTraits):
             handler=DistributionFittingToolController(),
         )
 
+fitter = DistributionFittingTool()
 
 if __name__ == "__main__":
-    tool = DistributionFittingTool()
-    tool.configure_traits()
+    fitter.configure_traits()
+
+# EOF

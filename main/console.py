@@ -11,7 +11,7 @@ from main.workspace import Workspace, workspace
 
 class Console(HasTraits):
     workspace = Instance(Workspace)
-    environment = DelegatesTo('workspace', prefix='data_space')
+    environment = DelegatesTo('workspace', prefix='data')
 
     # record history commands for future review
     command_to_execute = Event

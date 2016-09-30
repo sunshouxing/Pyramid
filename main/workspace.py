@@ -9,7 +9,9 @@ from traits.api import *
 
 class Workspace(SingletonHasTraits):
 
-    data_space = Dict
+    data = Dict
+
+    fits = Dict
 
 
 workspace = Workspace()

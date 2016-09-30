@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # ---- [Imports] ---------------------------------------------------------------
+import os.path as osp
+
 from pyface.api import ImageResource
 from traits.api import \
     HasTraits, Instance, List
 from traitsui.api import \
-    View, UCustom, HSplit, VSplit, Menu, MenuBar, Action, ToolBar, ListEditor, Separator
+    View, UCustom, HSplit, VSplit, Menu, MenuBar, Action, ToolBar, ListEditor
 
-from common import ICONS_PATH
+from common import ICONS_PATH, PROJECT_HOME
 from main.console import Console
-from main.event_log import event_log
 from main.data_explorer import DataExplorer, data_model
 from main.event_bus import EventBus
+from main.event_log import event_log
 from main.file_explorer import FileExplorer, file_model
 
 
@@ -111,7 +113,7 @@ class MainUI(HasTraits):
         Action(
             image=ImageResource('glyphicons-73-bookmark.png', search_path=[ICONS_PATH]),
             tooltip=u'收藏夹',
-            action='print_figure'
+            action='manage_bookmarks'
         ),
         Action(
             image=ImageResource('glyphicons-359-file-import.png', search_path=[ICONS_PATH]),
@@ -230,7 +232,7 @@ class MainUI(HasTraits):
         # TODO implement init data generator menu action
         print 'initializing data generator...'
 
-    def init_data_reader(self):
+    def init_data_reader(self, info):
         # TODO implement init data reader menu action
         print 'initializing data reader...'
 
@@ -243,16 +245,24 @@ class MainUI(HasTraits):
         # TODO implement init filter
         print 'initializing filter...'
 
-    @staticmethod
-    def init_fitter():
-        from toolbox.fitter.distribution_fitting_tool import DistributionFittingTool
-        DistributionFittingTool().edit_traits()
+    # @staticmethod
+    def init_fitter(self, info):
+        from toolbox.fitter.distribution_fitting_tool import fitter
+        fitter.configure_traits()
 
     @staticmethod
     def show_help_info():
-        from help import help_info
+        from main.help import help_info
         help_info.edit_traits()
 
+    # ------------------------------ #
+    #       Toolbar actions          #
+    # ------------------------------ #
+
+    @staticmethod
+    def manage_bookmarks():
+        from main.book_marks import Bookmarks, BookmarksManager
+        BookmarksManager(Bookmarks(osp.join(PROJECT_HOME, 'bookmarks.txt'))).edit_traits()
 
 if __name__ == '__main__':
     MainUI().configure_traits()
