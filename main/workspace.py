@@ -4,23 +4,16 @@
 """
 
 # ---- Import -------------------------------------------------------------
-# from traits.api import HasTraits, Dict, List
-# from common import singleton
-#
-# @singleton
-# class Workspace(HasTraits):
-#     data = Dict
-#     fits = List
+from traits.api import *
 
 
-def get_data():
-    return get_data.data
+class Workspace(SingletonHasTraits):
 
-def get_fits():
-    return get_fits.fits
+    data = Dict
 
-get_data.data = {}
+    fits = Dict
 
-get_fits.fits = {}
+
+workspace = Workspace()
 
 # EOF

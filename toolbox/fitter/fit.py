@@ -7,16 +7,15 @@ import numpy as np
 from scipy import stats
 from scipy.stats import rv_continuous
 from traits.api import \
-    HasTraits, Str, Instance, List, Button
+    HasTraits, Str, Instance, List, Button, DelegatesTo
 from traitsui.api import \
     View, Item, UItem, UReadonly, Group, VGroup, \
     HGroup, spring, Action, Controller, EnumEditor
 
-from main.workspace import FITS
-from main.workspace import DATA
+from main.workspace import workspace
 
 
-class FitController(Controller):
+class FitGenerator(Controller):
     # ---- Trait Definitions -------------------------------------------------------------
     candidate_data_names = List(Str)
     selected_data_name = Str
@@ -30,11 +29,11 @@ class FitController(Controller):
     )
 
     def __init__(self):
-        self.candidate_data_names = DATA.keys()
+        self.candidate_data_names = workspace.data.keys()
 
     # ---- Event Handlers ----------------------------------------------------------------
     def _selected_data_name_changed(self):
-        self.info.object.data = DATA[self.selected_data_name]
+        self.info.object.data = workspace.data[self.selected_data_name]
 
     def _apply_fit_button_fired(self):
         distribution = self.info.object.distribution
@@ -47,10 +46,11 @@ class FitController(Controller):
         self.fit_result = '\n'.join(['{} = {}'.format(k, v) for k, v in shapes.items()])
         self.info.object.fit = self.info.object.distribution(**shapes)
 
-    def export_fit(self, info):
+    @staticmethod
+    def export_fit(info):
         fit_name = info.object.name
         fit = info.object.fit
-        FITS[fit_name] = fit
+        workspace.fits[fit_name] = fit
 
         info.object.target.current_fit_name = fit_name
         info.ui.control.close()
@@ -111,8 +111,8 @@ class Fit(HasTraits):
                 UItem("handler.fit_result", style="custom"), label=u"拟合结果",
             ),
         ),
-        handler=FitController,
-        buttons=[FitController.export_fit_button],
+        handler=FitGenerator,
+        buttons=[FitGenerator.export_fit_button],
         title=u"数据拟合窗口",
         height=700,
         width=400,

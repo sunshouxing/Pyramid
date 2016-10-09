@@ -11,7 +11,7 @@ from chaco.api import Plot, ArrayPlotData
 from enable.api import ComponentEditor
 
 import numpy as np
-from main.workspace import DATA
+from main.workspace import workspace
 
 
 class DataManager(Controller):
@@ -32,14 +32,14 @@ class DataManager(Controller):
     def __init__(self, *args, **traits):
         super(DataManager, self).__init__(*args, **traits)
 
-        self.candidate_data_names = DATA.keys()
+        self.candidate_data_names = workspace.data.keys()
         self.plot = Plot(ArrayPlotData(), title='Data Preview')
 
     def _selected_data_name_changed(self):
-        if self.selected_data_name not in DATA.keys():
+        if self.selected_data_name not in workspace.data.keys():
             return
 
-        self.model.data = DATA[self.selected_data_name]
+        self.model.data = workspace.data[self.selected_data_name]
 
         y, x = np.histogram(self.info.object.data, bins=50)
         x = (x[:-1] + x[1:]) / 2
@@ -53,7 +53,7 @@ class DataManager(Controller):
         from ..generator.random_data_generator import RandomDataGenerator, RandomData
         RandomDataGenerator(RandomData()).edit_traits()
 
-        self.candidate_data_names = DATA.keys()
+        self.candidate_data_names = workspace.data.keys()
 
     @cached_property
     def _get_completable(self):

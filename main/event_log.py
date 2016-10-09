@@ -6,6 +6,8 @@ from traits.api import HasTraits, Str, Code, Button
 from traitsui.api import \
     View, HGroup, VGroup, UReadonly, UCustom, spring, Controller
 
+from common import ICONS_PATH
+
 
 class LogModel(HasTraits):
     log = Code
@@ -18,10 +20,10 @@ class LogModel(HasTraits):
 
 
 class EventLog(Controller):
-    name = Str
+    tab_name = Str
 
     clear_button = Button(
-        image=ImageResource('../icons/glyphicons-17-bin.png'),
+        image=ImageResource('glyphicons-17-bin.png', search_path=[ICONS_PATH]),
         style='toolbar'
     )
 
@@ -30,18 +32,21 @@ class EventLog(Controller):
             VGroup(
                 UCustom('handler.clear_button', tooltip=u'清除日志'),
                 spring,
+                show_border=True,
             ),
-            '_',
+            # '_',
             UReadonly('log'),
         ),
     )
 
     def __init__(self, *args, **traits):
         super(EventLog, self).__init__(*args, **traits)
-        self.name = u'系统日志'
+        self.tab_name = u'系统日志'
 
+
+event_log = EventLog(model=LogModel())
 
 if __name__ == '__main__':
-    EventLog(model=LogModel()).configure_traits()
+    event_log.configure_traits()
 
 # EOF

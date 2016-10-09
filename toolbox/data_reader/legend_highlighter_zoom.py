@@ -1,7 +1,6 @@
-__author__ = 'SUN Shouwang'
+# -*- coding: utf-8 -*-
 
 import operator
-
 from chaco.tools.api import LegendHighlighter
 
 
@@ -35,5 +34,5 @@ class LegendHighlighterZoom(LegendHighlighter):
                     min_value = min(render.value.get_data()[mask_array])
                 else:
                     min_value = min(min_value, min(render.value.get_data()[mask_array]))
-        range_vallue = max_value - min_value
-        render.container.value_range.set_bounds(min_value-range_vallue/10, max_value+range_vallue/10)
+        range_value = max_value - min_value
+        render.container.value_range.set_bounds(min_value-range_value/10, max_value+range_value/10)

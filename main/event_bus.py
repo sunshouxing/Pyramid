@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
 # ---- Imports -----------------------------------------------------------
-from traits.api import HasTraits, Any, Str
+from traits.api import HasTraits, Enum, Any
 
 
 class EventBus(HasTraits):
-    command = Str('')
+    command = Enum('NONE', 'IMPORT_DATA', 'EXPORT_DATA', 'EXPORT_SELECTED_DATA')
     args = Any()
 
     def fire_event(self, command, args=None):
-        self.command = command
+        # set args value first to avoid invoke event handler with None args
         self.args = args
+        self.command = command
 
 # EOF

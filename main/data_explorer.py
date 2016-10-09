@@ -2,48 +2,25 @@
 
 # ---- Import -------------------------------------------------------------
 import json
-from operator import itemgetter
+import time
+from threading import Thread
 
 import scipy.io as sio
 from pyface.api import FileDialog, OK, NO, confirm
+from pyface.api import ImageResource
 from traits.api import \
-    HasTraits, Int, Str, List, Tuple, Dict, Any, Instance, \
+    HasTraits, Bool, Str, List, Tuple, Any, Button, Instance, \
     Property, DelegatesTo, Event, on_trait_change, cached_property
 from traitsui.api import \
-    View, UCustom, UReadonly, UItem, TableEditor, ShellEditor, \
-    ObjectColumn, Label, HGroup, VGroup, VSplit, Controller, Menu, Action, Separator
+    View, UCustom, UReadonly, TableEditor, ObjectColumn, HGroup, VGroup, Controller, \
+    Menu, Action, Separator, spring
 
+from common import ICONS_PATH
 from data_common import *
 from data_inspector import \
     DataInspectorRecord, DataInspectorSequence, DataInspectorDict
 from event_bus import EventBus
-
-import workspace
-
-demo_data = {
-    's': 'aaa',
-    'a': 1,
-    'b': 2L,
-    'pi': 3.1416,
-    'j': (1, 2, 3),
-    'k': [1, 2, 3],
-    # 'm':[
-    #     [
-    #         [1,2], [3,4],
-    #     ],
-    #     [
-    #         [10,20], [30,40],
-    #     ],
-    #     [
-    #         [100,200], [300,400, [500,600]],
-    #     ]
-    # ],
-    # 'm':[1,2,'x'],
-    'd2': dict(a=dict(aa=1, ab=2), b=dict(ba=3, bb=4)),
-    'd': {'x': 1, 'a': "string", "b": [[0, 1], [2, 3]]},
-    'a2d': [[0, 1], [2, 3], [4, 5]],
-    'dd': {'a': [0, 1], 'b': [2, 3], 'c': [4, 5, 6]},
-}
+from main.workspace import Workspace, workspace
 
 
 def _compute_shape(value):
@@ -120,39 +97,37 @@ class RowModel(HasTraits):
         return "<{}, {}:{}>".format(self.__class__.__name__, self.field_name, self.raw_value)
 
 
-class DataModel(HasTraits):
+class DataModel(HasTraits, Thread):
     """ Data model for entire data explorer
     """
-    # command_to_execute = Event
-
     # list of RowModels represents data in data_space, used for both view and export
     data_list = List(RowModel)
-    # python environment
-    workspace = Instance()
-    data_space = DelegatesTo('workspace', prefix='data')
 
     # list of RowModels - for multi-selection (filtered subset for export)
     selected_rows = List(RowModel)
 
-    def __init__(self, workspace, **traits):
-        super(DataModel, self).__init__(**traits)
+    # global workspace and its data space
+    workspace = Instance(Workspace)
+    data_space = DelegatesTo('workspace', prefix='data')
+
+    def __init__(self, *args, **traits):
+        super(DataModel, self).__init__(*args, **traits)
         self.workspace = workspace
 
     # --------------------------------------
-    # DataModel trait listener
+    # Trait listeners
     # --------------------------------------
-    # def _command_to_execute_fired(self, v):
-    #     print 'command_to_execute: ', v
-
-    def _selected_rows_changed(self):
-        # FIXME debug info
-        print('DEBUG: {} rows selected.'.format(len(self.selected_rows)))
 
     def _data_space_changed(self):
-        # FIXME debug info
-        print('DEBUG: var space changed')
+        self.update_data_space()
 
-        # clear the variables set and the selection:
+    def _data_space_items_changed(self):
+        self.update_data_space()
+
+    # ---------- end of listeners -----------
+
+    def update_data_space(self):
+        # clear the variable list and the selection:
         self.selected_rows[:] = []
         # update view
         self.data_list[:] = [
@@ -163,67 +138,44 @@ class DataModel(HasTraits):
         if len(self.data_list) == 0:
             self.data_list[:] = [RowModel()]
 
-    def _data_space_items_changed(self):
-        self._data_space_changed()
-
-    # ---------- end of listeners -----------
-
     def to_json_dict(self, selection_only=False):
+        data_source = selection_only and self.selected_rows or self.data_list
+        return {item.field_name: item.raw_value for item in data_source}
 
-        def parse_node(node):
-            buff = {'type': qualified_type(node)}
-            if isinstance(node, dict):
-                buff['value'] = dict([(k, parse_node(v)) for k, v in node.items()])
-            elif is_sequence(node):
-                buff['value'] = [parse_node(v) for v in node]
-            else:
-                buff['value'] = node
+    def from_json_dict(self, data):
+        # def parse_item_info(info):
+        #     value = info['value']
+        #     if isinstance(value, dict):
+        #         buff = {}
+        #         for k, v in value.items():
+        #             buff[k] = parse_item_info(v)
+        #     elif is_sequence(value):
+        #         buff = []
+        #         for v in value:
+        #             buff.append(parse_item_info(v))
+        #     else:
+        #         buff = value
+        #     _type = info['type']
+        #     # load modules if any specified in a qualified type:
+        #     tags = _type.split('.')
+        #     if len(tags) > 1:
+        #         # trim "type" itself
+        #         tags = tags[:-1]
+        #         modname = tags[-1]
+        #         # in case if module in a package:
+        #         q_modname = '.'.join(tags)
+        #         self.data_space[modname] = eval('__import__({!r})'.format(q_modname), self.data_space)
+        #         print 'imported module: {} {}; type: {}'.format(modname, q_modname, _type)
+        #     return eval('{}({})'.format(_type, repr(buff)), self.data_space)
 
-            return buff
-
-        buff = {}
-
-        # select source for export
-        source = (selection_only and self.selected_rows or self.data_list)
-
-        for order, row in enumerate(source):
-            buff[row.fname] = parse_node(row.raw_value)
-            buff[row.fname]['order'] = order
-        return buff
-
-    def from_json_dict(self, d):
-        def parse_item_info(info):
-            value = info['value']
-            if isinstance(value, dict):
-                buff = {}
-                for k, v in value.items():
-                    buff[k] = parse_item_info(v)
-            elif is_sequence(value):
-                buff = []
-                for v in value:
-                    buff.append(parse_item_info(v))
-            else:
-                buff = value
-            _type = info['type']
-            # load modules if any specified in a qualified type:
-            tags = _type.split('.')
-            if len(tags) > 1:
-                # trim "type" itself
-                tags = tags[:-1]
-                modname = tags[-1]
-                # in case if module in a package:
-                q_modname = '.'.join(tags)
-                self.data_space[modname] = eval('__import__({!r})'.format(q_modname), self.data_space)
-                print 'imported module: {} {}; type: {}'.format(modname, q_modname, _type)
-            return eval('{}({})'.format(_type, repr(buff)), self.data_space)
-
-        _list = [dict(var_name=k, **v) for k, v in d.items()]
-        _list.sort(key=itemgetter('order'))
-        buff = {}
-        self.data_space.clear()
-        for row in _list:
-            buff[row['var_name']] = parse_item_info(row)
-        self.data_space.update(buff)
+        # _list = [dict(var_name=k, **v) for k, v in d.items()]
+        # _list.sort(key=itemgetter('order'))
+        # buff = {}
+        # self.data_space.clear()
+        # for row in _list:
+        #     buff[row['var_name']] = parse_item_info(row)
+        # self.data_space.update(buff)
+        self.data_space.update(data)
 
     def from_mat_file(self, file_name):
         """ Allows to load data from files saved by MATLAB into plain Python dicts
@@ -291,7 +243,7 @@ class DataModel(HasTraits):
 
     def to_mat_file(self, file_name, selection_only=False):
         # buff = self.to_json_dict()
-        buff = {}
+        _buffer = {}
 
         # select source for export:
         if selection_only:
@@ -300,8 +252,8 @@ class DataModel(HasTraits):
             source = self.data_list
 
         for row in source:
-            buff[row.fname] = row.raw_value
-        sio.savemat(file_name, buff)
+            _buffer[row.field_name] = row.raw_value
+        sio.savemat(file_name, _buffer)
 
 
 class DataInspector(Controller):
@@ -361,32 +313,23 @@ class DataInspector(Controller):
                 self.path_tags.append('[{!r}]'.format(address))
 
     def _selected_cell_changed(self):
-        # FIXME debug info
-        print('DEBUG: selected cell details: {}'.format(self.selected_cell))
-
         inspector_row, column_name = self.selected_cell
         if inspector_row is not None:
             root, address, value, label = inspector_row.cell_info(column_name)
             self.inspector_label = label
 
-    # FIXME debug info
-    def _inspector_label_changed(self, old, new):
-        print('DEBUG: inspector label changed from {} to {}.'.format(old, new))
-
-    # FIXME debug info
-    def _path_tags_items_changed(self):
-        print('DEBUG: path tags: {!s}'.format(self.path_tags))
-
     @cached_property
     def _get_data_label(self):
         return u'{}{}'.format(''.join(self.path_tags), self.inspector_label)
 
-# end of DataInspector definition
+# End of DataInspector definition
 
 
 class DataExplorer(Controller):
     """ sub-application controller
     """
+    tab_name = u'数据空间'
+
     # inter-app commands and notifications
     event_bus = Instance(EventBus)
     # delegation of event bus' command
@@ -410,6 +353,19 @@ class DataExplorer(Controller):
     # selected cell details, used as data_inspector's selected parameter
     inspector_selected_cell = Tuple
 
+    auto_update = Bool(False)
+
+    # buttons to update model's data space
+    manual_update_button = Button(
+        style='toolbar',
+        image=ImageResource('glyphicons-82-refresh.png', search_path=[ICONS_PATH]),
+    )
+
+    auto_update_button = Button(
+        style='toolbar',
+        image=ImageResource('glyphicons-58-history.png', search_path=[ICONS_PATH]),
+    )
+
     def __init__(self, *args, **traits):
         super(DataExplorer, self).__init__(*args, **traits)
         self.inspector = DataInspectorRecord()
@@ -417,26 +373,33 @@ class DataExplorer(Controller):
         # add notification handler to reflect val_space changes in the inspector
         self.model.on_trait_change(self._update_inspector, 'data_list[]')
 
+        auto_update_thread = Thread(target=self.auto_update_data_space)
+        auto_update_thread.start()
+
     # --------------------------------------
-    # trait listeners
+    # Trait listeners
     # --------------------------------------
     def _command_changed(self):
         """ Command dispatcher """
-        command = self.command
-        # FIXME debug info
-        print('DEBUG: command changed to "{}"'.format(command))
+        command, arguments = self.command, self.args
+
         # if command is not "empty"
         if command:
             # find command handler in own methods
             try:
-                handler = getattr(self, '_{}'.format(command))
-                # FIXME debug info
-                print('DEBUG: response command "{}" with handler {}'.format(command, handler.__name__))
+                handler = getattr(self, '_{}'.format(command).lower())
             except AttributeError:
                 # ignore command if handler not defined
                 return
 
-            handler(self.args)
+            handler(arguments)
+
+    def _manual_update_button_changed(self):
+        self.auto_update = False
+        self.model.update_data_space()
+
+    def _auto_update_button_changed(self):
+        self.auto_update = True
 
     @cached_property
     def _get_data_label(self):
@@ -458,15 +421,20 @@ class DataExplorer(Controller):
             self.path_tags.append('[{!r}]'.format(address))
 
     def _inspector_selected_cell_changed(self):
-        # FIXME debug info
-        print('DEBUG: selected cell details: {}'.format(self.inspector_selected_cell))
-
         inspector_row, column_name = self.inspector_selected_cell
         if inspector_row is not None:
             root, address, value, label = inspector_row.cell_info(column_name)
             self.inspector_label = label
 
     # --------- end of listeners -----------
+
+    def auto_update_data_space(self):
+        while True:
+            if self.auto_update:
+                self.model.update_data_space()
+                self.info.ui.get_editors('data_list')[0].update_editor()
+
+            time.sleep(5)
 
     def init_inspector(self, root, name):
         # update active inspector
@@ -502,8 +470,9 @@ class DataExplorer(Controller):
     # Event/command handlers
     # ---------------------------------------
 
-    def _CMD_IMPORT(self, file_name):
-        """ Handler for external command """
+    def _import_data(self, file_name):
+        """ Handler for data explorer's import data menu
+        """
         # reset inspector:
         # self.inspector = DataInspectorRecord()
 
@@ -511,36 +480,32 @@ class DataExplorer(Controller):
         if ext == 'mat':
             # self.model.from_json_dict(buff)
             self.model.from_mat_file(file_name)
-
         elif ext == 'json':
-            buff = ''
-            with open(file_name, 'rb') as f:
-                buff = f.read()
-            model = json.loads(buff)
-            self.model.from_json_dict(model)
-
+            with open(file_name, 'rb') as src_file:
+                external_data = json.load(src_file)
+                self.model.from_json_dict(external_data)
         else:
             raise DataExplorerError('Unsupported file format: {}'.format(ext))
-
+        
         # update initial selection - first row:
         if len(self.model.data_list) > 0:
             self.handle_row_select([self.model.data_list[0]])
 
-    def _CMD_EXPORT_SELECTED(self, file_name):
-        """ Handler for external command """
+    def _export_selected_data(self, file_name):
+        """ Handler for data explorer's export selected data menu
+        """
         self.__switch_command_export(file_name, selection_only=True)
 
-    def _CMD_EXPORT(self, file_name):
-        """ Handler for external command """
+    def _export_data(self, file_name):
+        """ Handler for data explorer's export data menu
+        """
         self.__switch_command_export(file_name, selection_only=False)
 
     def __switch_command_export(self, file_name, selection_only):
-        """ Helps to avoid repeated code """
         ext = file_name.split('.')[-1]
         if ext == 'mat':
             self.model.to_mat_file(file_name, selection_only)
         elif ext == 'json':
-            print "exporting to: ", file_name
             buff = self.model.to_json_dict(selection_only)
             buff = json.dumps(buff)
             with open(file_name, 'wb') as f:
@@ -556,13 +521,13 @@ class DataExplorer(Controller):
         root.append(RowModel(name='', value=''))
         del root[-1]
 
-    # ---------------------------------------
-    # Menu actions
-    # ---------------------------------------
-    def _menu_select_all(self, uiinfo, selection):
+    # --------------------------------------- #
+    #            Menu actions                 #
+    # --------------------------------------- #
+    def _menu_select_all(self, ui_info, selection):
         """ select all exist rows
         """
-        print selection, uiinfo
+        print selection, ui_info
         self.model.selected_rows = self.model.data_list[:]
         print "selection: {}".format(len(self.model.selected_rows))
 
@@ -574,19 +539,17 @@ class DataExplorer(Controller):
             wildcard="MATLAB files (*.mat)|*.mat|JSON files (*.json)|*.json"
         )
         if dialog.open() == OK:
-            # FIXME debug info
-            print("DEBUG: importing data from {}...".format(dialog.path))
             self.event_bus.fire_event('CMD_IMPORT', dialog.path)
 
-    def _menu_do_export_selected(self, uiinfo, selection):
+    def _menu_do_export_selected(self, ui_info, selection):
         """ Handle menu item """
-        self.__switch_menu_export(uiinfo, 'CMD_EXPORT_SELECTED')
+        self.__switch_menu_export(ui_info, 'EXPORT_SELECTED_DATA')
 
-    def _menu_do_export(self, uiinfo, selection):
+    def _menu_do_export(self, ui_info, selection):
         """ Handle menu item """
-        self.__switch_menu_export(uiinfo, 'CMD_EXPORT')
+        self.__switch_menu_export(ui_info, 'EXPORT_DATA')
 
-    def __switch_menu_export(self, info, send_command):
+    def __switch_menu_export(self, info, command):
         """ Helps to avoid repeated code """
 
         dialog = FileDialog(
@@ -597,12 +560,10 @@ class DataExplorer(Controller):
         if dialog.open() == OK:
             import os
             if os.path.exists(dialog.path):
-                message = "File {} already exists. Do you want to overwrite?".formate(dialog.path)
+                message = "File {} already exists. Do you want to overwrite?".format(dialog.path)
                 if confirm(info.ui.control, message) == NO:
                     return
-            # FIXME debug info
-            print('DEBUG: saving data to file {} ...'.format(dialog.path))
-            self.event_bus.fire_event(send_command, dialog.path)
+            self.event_bus.fire_event(command, args=dialog.path)
 
     # ---- View definition -----------------------------------------------
     table_editor = TableEditor(
@@ -682,43 +643,48 @@ class DataExplorer(Controller):
     )
 
     traits_view = View(
-        VGroup(
-            VSplit(
-                # explorer for all data
+        '_',
+        HGroup(
+            '10',
+            VGroup(
                 HGroup(
-                    '10',
                     UCustom('data_list', editor=table_editor),
-                    '10',
+                    show_border=True,
+                    label=u'数据列表',
                 ),
-                # single data inspector
                 VGroup(
-                    HGroup(
-                        '10',
-                        UReadonly('handler.data_label'),
-                        '10',
-                    ),
-                    HGroup(
-                        '10',
-                        UCustom('handler.inspector.editor_buffer', editor=data_inspector),
-                        '10',
-                    ),
+                    UReadonly('handler.data_label'),
+                    UCustom('handler.inspector.editor_buffer', editor=data_inspector),
+                    show_border=True,
+                    label=u'浏览器',
                 ),
             ),
             VGroup(
-                Label(' '),
-            )
+                '10',
+                UCustom(
+                    'handler.manual_update_button',
+                    tooltip=u'手动刷新',
+                ),
+                UCustom(
+                    'handler.auto_update_button',
+                    tooltip=u'定时刷新',
+                ),
+                spring,
+                # show_border=True,
+            ),
+            '10',
         ),
-        width=600,
-        height=700,
         resizable=False,
         title=u'数据浏览器',
-        # handler=HandleEvent
     )
 
 
-model = DataModel
+data_model = DataModel
 
 if __name__ == '__main__':
-    model = model(workspace=workspace)
+    """ Test mode
+    """
     event_bus = EventBus()
-    DataExplorer(model=model, event_bus=event_bus).configure_traits()
+    DataExplorer(model=data_model(), event_bus=event_bus).configure_traits()
+
+# EOF
