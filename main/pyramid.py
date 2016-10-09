@@ -1,52 +1,68 @@
 # -*- coding: utf-8 -*-
 
 # ---- [Imports] ---------------------------------------------------------------
-import os.path as osp
 
 from pyface.api import ImageResource
 from traits.api import \
-    HasTraits, Instance, List
+    HasTraits, SingletonHasTraits, HTML, Enum, Instance, List
 from traitsui.api import \
-    View, UCustom, HSplit, VSplit, Menu, MenuBar, Action, ToolBar, ListEditor
+    View, Controller, UItem, UCustom, HSplit, VSplit, \
+    Menu, MenuBar, Action, ToolBar, ListEditor, HTMLEditor
 
-from common import ICONS_PATH, PROJECT_HOME
+from common import ICONS_PATH
 from main.console import Console
 from main.data_explorer import DataExplorer, data_model
 from main.event_bus import EventBus
 from main.event_log import event_log
 from main.file_explorer import FileExplorer, file_model
 
+_notice_text = u'''
+系统退出后，尚未保存的数据将丢失无法恢复！
 
-class MainUI(HasTraits):
-    """ Main window which combines several views
-    """
-    event_bus = Instance(EventBus)
+单击【返回】按钮，返回系统保存数据；单击【退出】按钮，直接退出。
+'''
 
-    # navigator tools
-    navigators = List(HasTraits)
 
-    # tools to operate and view data
-    data_area = List(HasTraits)
+class _ConfirmInfo(SingletonHasTraits):
+    # confirm info of retreating to save data or existing directly
+    state = Enum('RETREAT', 'EXIST')
 
-    # auxiliary tools
-    auxiliaries = List(HasTraits)
 
-    def __init__(self):
-        super(MainUI, self).__init__()
-        self.event_bus = EventBus()
+class _ConfirmInfoController(Controller):
 
-        # add file explorer to navigators area
-        self.navigators.append(FileExplorer(
-            model=file_model(), event_bus=self.event_bus
-        ))
-        # add data explorer to data area
-        self.data_area.append(DataExplorer(
-            model=data_model(), event_bus=self.event_bus
-        ))
-        # add console and system log to auxiliary tools
-        self.auxiliaries.append(Console())
-        self.auxiliaries.append(event_log)
+    notice = HTML(_notice_text)
 
+    retreat_action = Action(
+        id='retreat_action_id',
+        name=u'返回',
+        action='retreat',
+    )
+
+    exist_action = Action(
+        id='exist_action_id',
+        name=u'退出',
+        action='exist',
+    )
+
+    traits_view = View(
+        UItem('handler.notice', editor=HTMLEditor(format_text=True)),
+        buttons=[retreat_action, exist_action],
+        width=550,
+        height=150,
+        title=u'提示信息',
+        kind='modal',
+    )
+
+    def retreat(self, info):
+        self.model.state = 'RETREAT'
+        info.ui.control.close()
+
+    def exist(self, info):
+        self.model.state = 'EXIST'
+        info.ui.control.close()
+
+
+class MainUIController(Controller):
     # ---- [View definition] ------------------------------------------------
     # design menu bar
     menu_bar = MenuBar(
@@ -118,37 +134,37 @@ class MainUI(HasTraits):
         Action(
             image=ImageResource('glyphicons-359-file-import.png', search_path=[ICONS_PATH]),
             tooltip=u'导入数据',
-            action='zoom_in'
+            action='import_data'
         ),
         Action(
             image=ImageResource('glyphicons-360-file-export.png', search_path=[ICONS_PATH]),
             tooltip=u'导出数据',
-            action='zoom_out'
+            action='export_data'
         ),
         Action(
             image=ImageResource('glyphicons-365-cloud-download.png', search_path=[ICONS_PATH]),
             tooltip=u'数据下载器',
-            action='pan'
+            action='init_downloader'
         ),
         Action(
             image=ImageResource('glyphicons-416-disk-open.png', search_path=[ICONS_PATH]),
             tooltip=u'数据读取器',
-            action='pan'
+            action='init_data_reader'
         ),
         Action(
             image=ImageResource('glyphicons-42-charts.png', search_path=[ICONS_PATH]),
             tooltip=u'数据生成器',
-            action='zoom_out'
+            action='init_data_generator'
         ),
         Action(
             image=ImageResource('glyphicons-790-filter-applied.png', search_path=[ICONS_PATH]),
             tooltip=u'滤波器',
-            action='zoom_out'
+            action='init_filter'
         ),
         Action(
             image=ImageResource('glyphicons-41-stats.png', search_path=[ICONS_PATH]),
             tooltip=u'拟合器',
-            action='zoom_out'
+            action='init_fitter'
         ),
         Action(
             image=ImageResource('glyphicons-488-fit-image-to-frame.png', search_path=[ICONS_PATH]),
@@ -217,7 +233,7 @@ class MainUI(HasTraits):
     )
 
     # ------------------------------ #
-    #          Menu actions          #
+    #    Menu & Toolbar actions      #
     # ------------------------------ #
 
     def import_data(self):
@@ -228,43 +244,84 @@ class MainUI(HasTraits):
         # TODO implement export data menu action
         print 'exporting data...'
 
-    def init_data_generator(self):
-        # TODO implement init data generator menu action
-        print 'initializing data generator...'
-
-    def init_data_reader(self, info):
-        # TODO implement init data reader menu action
-        print 'initializing data reader...'
+    @staticmethod
+    def init_data_reader(info):
+        from toolbox.data_reader.data_reader import data_reader
+        data_reader.edit_traits()
 
     @staticmethod
-    def init_downloader():
-        from toolbox.downloader.downloader_gui import controller
-        controller.edit_traits()
+    def init_filter(info):
+        from toolbox.filter.filter_view_multi import signal_filter
+        signal_filter.edit_traits()
 
-    def init_filter(self):
-        # TODO implement init filter
-        print 'initializing filter...'
+    @staticmethod
+    def init_downloader(info):
+        from toolbox.downloader.downloader_gui import downloader
+        downloader.edit_traits()
 
-    # @staticmethod
-    def init_fitter(self, info):
+    @staticmethod
+    def init_fitter(info):
         from toolbox.fitter.distribution_fitting_tool import fitter
-        fitter.configure_traits()
+        fitter.edit_traits()
 
     @staticmethod
-    def show_help_info():
+    def init_data_generator(info):
+        from toolbox.generator.random_data_generator import data_generator
+        data_generator.edit_traits()
+
+    @staticmethod
+    def show_help_info(info):
         from main.help import help_info
         help_info.edit_traits()
 
-    # ------------------------------ #
-    #       Toolbar actions          #
-    # ------------------------------ #
-
     @staticmethod
-    def manage_bookmarks():
-        from main.book_marks import Bookmarks, BookmarksManager
-        BookmarksManager(Bookmarks(osp.join(PROJECT_HOME, 'bookmarks.txt'))).edit_traits()
+    def manage_bookmarks(info):
+        from main.book_marks import bookmark_manager
+        bookmark_manager.edit_traits()
+
+    def close(self, info, is_ok):
+        confirm_info = _ConfirmInfo()
+        _ConfirmInfoController(model=confirm_info).edit_traits()
+
+        if confirm_info.state == 'EXIST':
+            return super(MainUIController, self).close(info, True)
+
+
+class MainUI(HasTraits):
+    """ Main window which combines several views
+    """
+    # the event bus between file system and data space
+    event_bus = Instance(EventBus)
+
+    # navigator tools (including file explorer now)
+    navigators = List(HasTraits)
+
+    # tools to operate and view data (including data list and data inspector)
+    data_area = List(HasTraits)
+
+    # auxiliary tools (include console and event log)
+    auxiliaries = List(HasTraits)
+
+    def __init__(self):
+        super(MainUI, self).__init__()
+        self.event_bus = EventBus()
+
+        # add file explorer to navigators area
+        self.navigators.append(FileExplorer(
+            model=file_model(), event_bus=self.event_bus
+        ))
+
+        # add data explorer to data area
+        self.data_area.append(DataExplorer(
+            model=data_model(), event_bus=self.event_bus
+        ))
+
+        # add console and system log to auxiliary tools
+        self.auxiliaries.append(Console())
+        self.auxiliaries.append(event_log)
+
 
 if __name__ == '__main__':
-    MainUI().configure_traits()
+    MainUIController(model=MainUI()).configure_traits()
 
 # EOF
