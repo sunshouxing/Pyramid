@@ -418,9 +418,9 @@ class DownloaderController(Controller):
         )
 
 
-controller = DownloaderController(Downloader())
+downloader = DownloaderController(Downloader())
 
 if __name__ == '__main__':
-    controller.configure_traits()
+    downloader.configure_traits()
 
 # EOF

@@ -233,10 +233,11 @@ class DataReader(Controller):
         return ['SEW1111-DX', 'SEW1112-DX', 'SEW1113-DX', 'SEW1114-DX', 'SEW1115-DX']
 
 
-if __name__ == '__main__':
-    data_spec = DataSpec()
-    DataReader(data_spec).configure_traits()
+data_reader = DataReader(DataSpec())
 
-    # _RootStructure().configure_traits()
+if __name__ == '__main__':
+    """ Test mode
+    """
+    data_reader.configure_traits()
 
 # EOF

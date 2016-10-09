@@ -9,7 +9,7 @@ import numpy as np
 from traits.api \
     import HasTraits, Instance, Int, Str, on_trait_change
 from traitsui.api import \
-    View, Item, UItem, UCustom, VGroup, HGroup, spring, EnumEditor, Controller, Action, OKButton
+    View, Item, UItem, UCustom, Group, VGroup, HGroup, spring, EnumEditor, Controller, Action, OKButton
 from chaco.api import Plot, ArrayPlotData
 from enable.api import ComponentEditor
 
@@ -50,9 +50,17 @@ class RandomDataGenerator(Controller):
     def do_export(self, info):
         self.edit_traits(view=View(
             HGroup(
-                spring,
-                UItem('samples_name', tooltip=u'请为导出数据选择一个合适的名字,并保证该名字未被以存在数据占用'),
-                spring
+                '10',
+                Group(
+                    UItem(
+                        'samples_name',
+                        tooltip=u'请为导出数据选择一个合适的名字,并保证该名字未被以存在数据占用'
+                    ),
+                    label=u'数据名称',
+                    show_border=True,
+                    padding=10,
+                ),
+                '10',
             ),
             buttons=[OKButton],
             title=u'数据命名',
@@ -153,6 +161,10 @@ class RandomData(HasTraits):
             print "shape parameters: {}".format(error)
 
 
+data_generator = RandomDataGenerator(RandomData())
+
+
 if __name__ == '__main__':
-    generator = RandomDataGenerator(RandomData())
-    generator.configure_traits()
+    """ Test mode
+    """
+    data_generator.configure_traits()

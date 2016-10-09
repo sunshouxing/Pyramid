@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 # ---- [Imports] --------------------------------------------------------------
+import os.path as osp
+
 from traits.api import SingletonHasTraits, Str, List
 from traitsui.api import \
     View, Controller, Action, UCustom, HGroup, VGroup, SetEditor
 
-import os.path as osp
+from common import PROJECT_HOME
 
 
 class Bookmarks(SingletonHasTraits):
@@ -23,8 +25,8 @@ class Bookmarks(SingletonHasTraits):
         """ Load book marks from file
         """
         if osp.exists(self.path):
-            with open(self.path, 'rb') as bookmarks:
-                return [line.strip().replace(';', osp.sep) for line in bookmarks.readlines()]
+            with open(self.path, 'rb') as _bookmarks:
+                return [line.strip().replace(';', osp.sep) for line in _bookmarks.readlines()]
 
     def dump(self):
         """ Dump book marks to file
@@ -77,5 +79,8 @@ class BookmarksManager(Controller):
         self.model.items = self.reserved_items
         self.model.dump()
         self.reserved_items = []
+
+bookmarks = Bookmarks(osp.join(PROJECT_HOME, 'bookmarks.txt'))
+bookmark_manager = BookmarksManager(model=bookmarks)
 
 # EOF

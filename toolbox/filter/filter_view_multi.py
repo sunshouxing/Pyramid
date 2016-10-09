@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# from traits.etsconfig.api import ETSConfig
-# ETSConfig.toolkit = 'qt4'
-
 from traits.api \
     import HasTraits, Bool, Float, List, Instance, Button, on_trait_change
 from traitsui.api \
@@ -19,9 +16,6 @@ from comm import *
 import fft_filter as fil
 
 
-# ############################################
-# Custom data models, components, controllers
-# ############################################
 class RangeModel(HasTraits):
     """
     Data model - the frequency range 
@@ -127,10 +121,6 @@ class RangeOverlay(RangeSelectionOverlay):
 
         if not self.rangedata.active:
             return
-        # print
-        # print(repr(gc), dir(gc))
-        # print(help(gc.set_fill_color))
-        # print
 
         # for coord in self.coordinate:
         # Draw the selection
@@ -402,13 +392,6 @@ class FilterView(HasTraits):
         self.range_selector = self.setup_range_selector(self.spectrum_plot.components[0], 1)
 
     def setup_range_selector(self, curve, addevent):
-
-        # overlay = RangeOverlay(
-        #         component=curve, 
-        #         # rangedata=RangeModel(low=selector.selection[0], high=selector.selection[1]),
-        #         main=self 
-        #         )
-
         # "hub" object which groups both the screen overlay and the data recor for range:
         selector = RangeController(
             curve,
@@ -422,18 +405,7 @@ class FilterView(HasTraits):
             selector.on_trait_change(self.selected_range_changed, "selection")
             selector.on_trait_change(self.selected_range_completed, "event_state")
 
-        # # deactivate another rnges:
-        # for rangedata in curve.tools:
-        #     if isinstance(rangedata, RangeController):
-        #         rangedata.focused = False
-        # for overlay in curve.overlays:
-        #     if isinstance(overlay, RangeOverlay):
-        #         overlay.focused = False;
-
         curve.tools.append(selector)
-        # curve.tools.append(SelectTool(curve))
-        # curve.active_tool = selector
-        # curve.overlays.append(overlay)
         return selector
 
     def selected_range_changed(self):
@@ -443,14 +415,7 @@ class FilterView(HasTraits):
         selection = self.range_selector.selection
 
         if selection is not None:
-            # stop_band = [(selection[0], selection[1])]
-
-            # selected_ranges
             self.pre_selection = RangeModel(lower=selection[0], upper=selection[1])
-            # print "calling RangeSelection_1?????????????????????????????????????????????????????"
-            # print 'selection: ', str(self.pre_selection)
-            # else:
-            # self.zoom_plotter.index_range.reset()
 
     def selected_range_completed(self):
         """
@@ -459,28 +424,6 @@ class FilterView(HasTraits):
         """
         # print self.range_selector.event_state
         if self.range_selector.event_state == "normal":  # and self.pre_selection is not None:
-            # check if exists:
-            # item_found = None
-            # for sel_ in self.selected_ranges:
-            #     if self.range_selector.rangedata._counter == sel_._counter:
-            #         item_found = sel_
-            #         sel_.lower = self.range_selector.rangedata.lower
-            #         sel_.upper = self.range_selector.rangedata.upper
-            #         print "Applying to existed: ", sel_._counter
-            #         break
-            # if not item_found:
-            #     print 'Now appending...'
-            #     # self.selected_ranges.append(self.range_selector.rangedata)
-
-            # self.curve_spectrum.overlays.append(
-            #     # RangeSelectionOverlay1(
-            #     RangeOverlay(
-            #         component=self.curve_spectrum,
-            #         rangedata=self.pre_selection,
-            #         main=self
-            #     )
-            # )
-
             self.redraw_signal_plot()
 
     def redraw_signal_plot(self):
@@ -504,7 +447,9 @@ class FilterController(object):
         self.figure.config_main_view(self.graphics_size_x, self.graphics_size_y)
 
 
-if __name__ == '__main__':
+signal_filter = FilterController(fil.simulate_signal()).figure
 
-    filter_controller = FilterController(fil.simulate_signal())
-    filter_controller.figure.configure_traits()
+if __name__ == '__main__':
+    """ Test mode
+    """
+    signal_filter.configure_traits()
