@@ -8,10 +8,11 @@ import numpy as np
 from traits.api import \
     HasTraits, Str, Instance, Enum, Button, Dict, on_trait_change
 from traitsui.api import \
-    View, Item, UItem, HGroup, VGroup, Group, spring, Controller, ShellEditor, \
+    View, Item, UItem, HGroup, VGroup, Group, spring, Controller, \
     Action, ActionGroup, Menu, MenuBar, ToolBar
 from pyface.api import ImageResource
-from chaco.api import Plot, ArrayPlotData
+from chaco.api import Plot, ArrayPlotData, ToolbarPlot
+from chaco.tools.api import LegendHighlighter
 from enable.api import ComponentEditor
 
 from main.workspace import workspace
@@ -24,22 +25,25 @@ class DistributionFittingToolController(Controller):
     evaluate_button = Button(u'评估...')
     exclude_data_button = Button(u'例外...')
 
-    def _config_data_button_fired(self):
+    @on_trait_change('config_data_button')
+    def select_data(self):
         from toolbox.common import Data, DataManager
         data = Data(self.info.object)
         data_manager = DataManager(data)
         data_manager.edit_traits()
 
-    def _new_fit_button_fired(self):
-        from fit import Fit
+    @on_trait_change('new_fit_button')
+    def new_fit(self):
+        from toolbox.fitter.fit import Fit, FitGenerator
+        FitGenerator(self.info.object, model=Fit()).edit_traits()
 
-        fit = Fit(target=self.info.object)
-        fit.edit_traits()
+    @on_trait_change('manage_fits_button')
+    def manage_fits(self):
+        from toolbox.fitter.fit_manager import FitManager
+        FitManager().edit_traits()
 
 
 class DistributionFittingTool(HasTraits):
-    values = Dict
-
     # plot data
     data = Instance(ArrayPlotData)
 
@@ -77,37 +81,25 @@ class DistributionFittingTool(HasTraits):
         y, x = np.histogram(data, bins=100, normed=True)
         x = (x[:-1] + x[1:]) / 2
 
-        self.data["x"] = x
-        self.data["y"] = y
-
-        plot = Plot(self.data)
+        self.data['x'], self.data['y'] = x, y
 
         width = np.ptp(x) / 100
-        bar_plot = plot.plot(("x", "y"), type="bar", name=self.current_data_name, bar_width=width, color="auto")[0]
+        bar_plot = self.plot.plot(("x", "y"), type="bar", name=self.current_data_name, bar_width=width, color="auto")[0]
         bar_plot.fill_color = bar_plot.fill_color_[:3] + (0,)
 
-        plot.legend.visible = True
-
-        self.plot = plot
+        self.plot.legend.visible = True
+        self.plot.legend.tools.append(
+            LegendHighlighter(component=self.plot.legend)
+        )
 
     @on_trait_change("current_fit_name")
     def fit_changed(self):
         fit = workspace.fits[self.current_fit_name]
 
-        x = self.data["x"]
-        z = fit.pdf(x)
-        self.data["z"] = z
+        x = self.data['x']
+        self.data[self.current_fit_name] = fit.pdf(x)
 
-        plot = Plot(self.data)
-        plot.plot(("x", "z"), type="line", name=self.current_fit_name, color="blue")
-
-        width = np.ptp(x) / 100
-        bar_plot = plot.plot(("x", "y"), type="bar", name=self.current_data_name, bar_width=width, color="auto")[0]
-        bar_plot.fill_color = bar_plot.fill_color_[:3] + (0,)
-
-        plot.legend.visible = True
-
-        self.plot = plot
+        self.plot.plot(("x", self.current_fit_name), type="line", name=self.current_fit_name, color="blue")
 
     # ------------------------------------------------------------------------------------
     # design the view of distribution fitting tool
@@ -115,113 +107,109 @@ class DistributionFittingTool(HasTraits):
     @staticmethod
     def traits_view():
         # design menu
-        menu_bar = MenuBar(
-            Menu(
-                ActionGroup(
-                    Action(id="import_data", name="Import Data...", action="import_data"),
-                ),
-                ActionGroup(
-                    Action(id="clear_session", name="Clear Session", action="clear_session"),
-                    Action(id="load_session", name="Load Session...", action="load_session"),
-                    Action(id="save_session", name="Save Session...", action="save_session"),
-                    Action(id="generate_code", name="Generate Code...", action="generate_code"),
-                ),
-                name="File"
-            ),
-
-            Menu(
-                name="View"
-            ),
-
-            Menu(
-                name="Tool"
-            ),
-
-            Menu(
-                name="Window"
-            ),
-
-            Menu(
-                ActionGroup(
-                    Action(id="help", name="Statistics Toolbox Help", action="about_dialog"),
-                    Action(id="help1", name="Distribution Fitting Tool Help", action="about_dialog"),
-                ),
-                ActionGroup(
-                    Action(id="help2", name="Demos", action="about_dialog"),
-                ),
-                name="Help"
-            )
-        )
-
+        # menu_bar = MenuBar(
+        #     Menu(
+        #         ActionGroup(
+        #             Action(id="import_data", name="Import Data...", action="import_data"),
+        #         ),
+        #         ActionGroup(
+        #             Action(id="clear_session", name="Clear Session", action="clear_session"),
+        #             Action(id="load_session", name="Load Session...", action="load_session"),
+        #             Action(id="save_session", name="Save Session...", action="save_session"),
+        #             Action(id="generate_code", name="Generate Code...", action="generate_code"),
+        #         ),
+        #         name="File"
+        #     ),
+        #
+        #     Menu(
+        #         name="View"
+        #     ),
+        #
+        #     Menu(
+        #         name="Tool"
+        #     ),
+        #
+        #     Menu(
+        #         name="Window"
+        #     ),
+        #
+        #     Menu(
+        #         ActionGroup(
+        #             Action(id="help", name="Statistics Toolbox Help", action="about_dialog"),
+        #             Action(id="help1", name="Distribution Fitting Tool Help", action="about_dialog"),
+        #         ),
+        #         ActionGroup(
+        #             Action(id="help2", name="Demos", action="about_dialog"),
+        #         ),
+        #         name="Help"
+        #     )
+        # )
+        #
         # design tool bar
-        tool_bar = ToolBar(
-            Action(
-                image=ImageResource("folder_page.png", search_path=["img"]),
-                tooltip="Print Figure",
-                action="print_figure"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Zoom In",
-                action="zoom_in"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Zoom Out",
-                action="zoom_out"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Pan",
-                action="pan"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Legend On/Off",
-                action="zoom_out"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Grid On/Off",
-                action="zoom_out"
-            ),
-            Action(
-                image=ImageResource("disk.png", search_path=["img"]),
-                tooltip="Restore Default Axes Limits",
-                action="zoom_out"
-            ),
-        )
+        # tool_bar = ToolBar(
+        #     Action(
+        #         image=ImageResource("folder_page.png", search_path=["img"]),
+        #         tooltip="Print Figure",
+        #         action="print_figure"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Zoom In",
+        #         action="zoom_in"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Zoom Out",
+        #         action="zoom_out"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Pan",
+        #         action="pan"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Legend On/Off",
+        #         action="zoom_out"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Grid On/Off",
+        #         action="zoom_out"
+        #     ),
+        #     Action(
+        #         image=ImageResource("disk.png", search_path=["img"]),
+        #         tooltip="Restore Default Axes Limits",
+        #         action="zoom_out"
+        #     ),
+        # )
 
         return View(
             VGroup(
-                HGroup(
-                    Item("display_type", width=150),
-                    Item("distribution", width=150),
-                    show_border=True,
-                ),
+                # HGroup(
+                #     Item("display_type", width=150),
+                #     Item("distribution", width=150),
+                #     show_border=True,
+                # ),
                 HGroup(
                     spring,
                     UItem("handler.config_data_button", tooltip="Import, view, rename, plot and delete data"),
                     UItem("handler.new_fit_button", tooltip="Add a fitted distribution"),
                     UItem("handler.manage_fits_button", tooltip="Edit, view, plot and rename fits"),
-                    UItem("handler.evaluate_button", tooltip="Evaluate fits to compute a table of results"),
-                    UItem("handler.exclude_data_button", tooltip="Define rules for excluding data from a fit"),
                     spring,
                 ),
                 UItem("plot", editor=ComponentEditor()),
-                label="Manager",
+                # label="Manager",
             ),
-            Group(
-                UItem(
-                    "values",
-                    editor=ShellEditor(share=True),
-                    dock="tab",
-                    export="DockWindowShell",
-                ),
-                label="Console",
-            ),
-            menubar=menu_bar,
-            toolbar=tool_bar,
+            # Group(
+            #     UItem(
+            #         "values",
+            #         editor=ShellEditor(share=True),
+            #         dock="tab",
+            #         export="DockWindowShell",
+            #     ),
+            #     label="Console",
+            # ),
             resizable=True,
             width=1200, height=700,
             title=u"分布拟合工具箱",
