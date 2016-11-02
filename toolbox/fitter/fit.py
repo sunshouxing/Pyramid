@@ -1,26 +1,35 @@
 # -*- coding: utf-8 -*-
 
-r"""module doc
-"""
 # ---- Imports ---------------------------------------------------------------------------
 import numpy as np
 from scipy import stats
 from scipy.stats import rv_continuous
+
 from traits.api import \
-    HasTraits, Str, Instance, List, Button, DelegatesTo
+    HasTraits, Bool, Str, Any, Instance, Float, List, Button, DelegatesTo
 from traitsui.api import \
-    View, Item, UItem, UReadonly, Group, VGroup, \
-    HGroup, spring, Action, Controller, EnumEditor
+    View, Controller, Item, UItem, UReadonly, Action, \
+    Group, VGroup, HGroup, spring, EnumEditor
 
 from main.workspace import workspace
 
 
 class FitGenerator(Controller):
     # ---- Trait Definitions -------------------------------------------------------------
+
+    # names of all data in data space
     candidate_data_names = List(Str)
+
+    # the name of selected data
     selected_data_name = Str
-    fit_result = Str
-    apply_fit_button = Button(u"应用")
+
+    # the data selected to fit with
+    data = Instance(np.ndarray)
+
+    # fitter toolkit
+    target = Any
+
+    apply_fit_button = Button(u'应用')
 
     export_fit_button = Action(
         id="fit_export_fit_id",
@@ -28,58 +37,38 @@ class FitGenerator(Controller):
         action="export_fit",
     )
 
-    def __init__(self):
+    def __init__(self, target, **traits):
+        super(FitGenerator, self).__init__(**traits)
+        self.target = target
         self.candidate_data_names = workspace.data.keys()
 
     # ---- Event Handlers ----------------------------------------------------------------
     def _selected_data_name_changed(self):
-        self.info.object.data = workspace.data[self.selected_data_name]
+        self.data = workspace.data[self.selected_data_name]
 
     def _apply_fit_button_fired(self):
-        distribution = self.info.object.distribution
-        data = self.info.object.data
-        params = distribution.fit(data)
+        params = self.model.distribution.fit(self.data)
+
+        self.model.loc = loc = params[-2]
+        self.model.scale = scale = params[-1]
+
         shapes = {s: p for s, p in zip(self.info.object.shapes, params)}
-        shapes["loc"] = params[-2]
-        shapes["scale"] = params[-1]
+        self.model.shapes_desc = '\n'.join(['{} = {}'.format(k, v) for k, v in shapes.items()])
 
-        self.fit_result = '\n'.join(['{} = {}'.format(k, v) for k, v in shapes.items()])
-        self.info.object.fit = self.info.object.distribution(**shapes)
+        shapes.update({'loc': loc, 'scale': scale})
+        self.model.desc = '\n'.join(['{} = {}'.format(k, v) for k, v in shapes.items()])
+        self.info.object.fit = self.model.distribution(**shapes)
 
-    @staticmethod
-    def export_fit(info):
-        fit_name = info.object.name
-        fit = info.object.fit
-        workspace.fits[fit_name] = fit
+    def export_fit(self, info):
+        from toolbox.fitter.fit_manager import FitManager
 
-        info.object.target.current_fit_name = fit_name
+        workspace.fits[self.model.name] = self.model.fit
+        self.target.current_fit_name = self.model.name
+
+        fit_manager = FitManager()
+        fit_manager.model.fits.append(self.model)
+
         info.ui.control.close()
-
-
-class Fit(HasTraits):
-    # ---- Trait Definitions -------------------------------------------------------------
-    # the fit's name
-    name = Str
-
-    # the data to fit with
-    data = Instance(np.ndarray)
-
-    # the distribution type
-    distribution = Instance(rv_continuous)
-
-    # the distribution's shape parameters
-    shapes = List(Str)
-
-    def __init__(self, target):
-        super(Fit, self).__init__()
-        self.target = target
-
-    # - Event Handlers ---------------------------------------------------------
-    def _distribution_changed(self):
-        if self.distribution is not None and self.distribution.shapes is not None:
-            self.shapes = [p.strip() for p in self.distribution.shapes.split(",")]
-        else:
-            self.shapes = []
 
     # ---- Traits View Definitions -------------------------------------------------------
     traits_view = View(
@@ -108,13 +97,54 @@ class Fit(HasTraits):
                 spring, UItem("handler.apply_fit_button"),
             ),
             Group(
-                UItem("handler.fit_result", style="custom"), label=u"拟合结果",
+                UItem("desc", style="custom"), label=u"拟合结果",
             ),
         ),
-        handler=FitGenerator,
-        buttons=[FitGenerator.export_fit_button],
+        buttons=[export_fit_button],
         title=u"数据拟合窗口",
         height=700,
         width=400,
         resizable=True,
     )
+
+
+class Fit(HasTraits):
+    # ---- Trait Definitions -------------------------------------------------------------
+
+    # the fit's name
+    name = Str
+
+    # the distribution type
+    distribution = Instance(rv_continuous)
+
+    # fit's distribution type
+    type = Str
+
+    # the fit's location parameter
+    loc = Float
+
+    # the fit's scale parameter
+    scale = Float
+
+    # the fit's specific shape parameters
+    shapes = List(Str)
+
+    # the fit shapes' string format description
+    shapes_desc = Str
+
+    # fit's description including shapes, loc, scale
+    desc = Str
+
+    # flag for management
+    selected = Bool(False)
+
+    # - Event Handlers ---------------------------------------------------------
+    def _distribution_changed(self):
+        self.type = self.distribution.name
+
+        if self.distribution is not None and self.distribution.shapes is not None:
+            self.shapes = [p.strip() for p in self.distribution.shapes.split(",")]
+        else:
+            self.shapes = []
+
+# EOF

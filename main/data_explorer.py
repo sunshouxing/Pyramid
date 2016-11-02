@@ -527,11 +527,10 @@ class DataExplorer(Controller):
     def _menu_select_all(self, ui_info, selection):
         """ select all exist rows
         """
-        print selection, ui_info
         self.model.selected_rows = self.model.data_list[:]
         print "selection: {}".format(len(self.model.selected_rows))
 
-    def _menu_import(self, ui_info):
+    def _menu_import(self, ui_info, selection):
         """ Handle menu item """
         dialog = FileDialog(
             parent=ui_info.ui.control,

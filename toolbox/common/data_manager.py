@@ -3,14 +3,14 @@
 r""" Used by distribution fitting tool to import data or generate random data """
 
 # ---- Imports ---------------------------------------------------------------------------
+import numpy as np
+from chaco.api import Plot, ArrayPlotData
+from enable.api import ComponentEditor
 from traits.api \
     import HasTraits, Str, Instance, Property, Button, List, cached_property
 from traitsui.api \
     import View, Item, UItem, HGroup, VGroup, Controller, Action, EnumEditor, spring
-from chaco.api import Plot, ArrayPlotData
-from enable.api import ComponentEditor
 
-import numpy as np
 from main.workspace import workspace
 
 
@@ -74,8 +74,9 @@ class DataManager(Controller):
 
     trait_view = View(
         VGroup(
+            '10',
             HGroup(
-                Item('10'),
+                '10',
                 Item(
                     "handler.selected_data_name",
                     editor=EnumEditor(name="handler.candidate_data_names", cols=20),
@@ -83,10 +84,11 @@ class DataManager(Controller):
                 ),
                 spring,
                 UItem('handler.new_data_button', label=u"生成数据..."),
-                Item('10'),
+                '10',
             ),
-            Item('10'),
-            UItem("handler.plot", editor=ComponentEditor()),
+            '_',
+            UItem("handler.plot", editor=ComponentEditor(), width=1.0),
+            '10',
         ),
         buttons=[complete_button],
         title=u"数据预览窗口",

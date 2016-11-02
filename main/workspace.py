@@ -4,7 +4,7 @@
 """
 
 # ---- Import -------------------------------------------------------------
-from traits.api import *
+from traits.api import SingletonHasTraits, Dict
 
 
 class Workspace(SingletonHasTraits):
